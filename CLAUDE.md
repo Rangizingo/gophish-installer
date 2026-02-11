@@ -13,6 +13,8 @@ Automate complete GoPhish setup:
 - Deploy GoPhish via Docker container
 - Configure for first use
 - Provide ready-to-campaign environment
+- Deploy and manage phishing simulation campaigns
+- Email delivery diagnostics for M365/Google Workspace
 
 ## Target Environment
 
@@ -60,9 +62,32 @@ install-gophish.ps1
 - Campaign data contains sensitive employee info - handle with care
 - Only use for authorized security awareness testing
 
+## Campaign Tooling
+
+```
+setup-gophish.ps1          # API automation
+launch-campaign.ps1        # Campaign launcher
+update-template.ps1        # Template management
+full-diagnose.ps1          # M365 8-point delivery check
+diagnose-email-delivery.ps1 # Delivery trace
+check-email-delivery.ps1   # Graph API checker
+templates/                 # Email & landing page HTML
+```
+
+## GoPhish Access
+
+- **Admin UI:** https://localhost:3333
+- **Landing page:** http://localhost:80 (use Cloudflare Tunnel for remote)
+- **SMTP:** Google Workspace SMTP Relay (smtp-relay.gmail.com:587)
+- **Sender domain:** blancoitservices.net
+- **M365 Note:** High Confidence Phish content gets quarantined - requires manual release or Advanced Delivery policy
+
 ## External Dependencies
 
 - Docker Desktop
 - WSL2 (Windows Subsystem for Linux)
 - Chocolatey package manager
 - GoPhish Docker image (gophish/gophish)
+- Cloudflare Tunnel (cloudflared) for remote access
+- Exchange Online PowerShell module
+- Google Workspace (SMTP relay)

