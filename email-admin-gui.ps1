@@ -5,7 +5,7 @@ Add-Type -AssemblyName System.Drawing
 $sender = "itsupport@blancoitservices.net"
 $domain = "blancoitservices.net"
 $gophishApi = "https://localhost:3333/api"
-$gophishKey = "37cb4c93eaec96c030a3d11dabcc7ac85595ba6ae9b5fb70e1c4a41f9a5a8f05"
+$gophishKey = "38154aafd6867378cb200f31661aa4ed524bb64aa8d91f6d1ad0d61fb8f695fa"
 $targets = @(
     @{ email = "pblanco@equippers.com"; first_name = "Peter"; last_name = "Blanco"; position = "IT Manager" }
     @{ email = "kmarchese@equippers.com"; first_name = "Kevin"; last_name = "Marchese"; position = "CIO" }

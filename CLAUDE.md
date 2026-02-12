@@ -57,8 +57,8 @@ install-gophish.ps1
 ## Security Considerations
 
 - Script requires admin elevation
-- No hardcoded credentials
-- Generated passwords stored securely
+- GoPhish API key hardcoded in scripts (rotate after engagement)
+- Default admin password must be changed on first login
 - Campaign data contains sensitive employee info - handle with care
 - Only use for authorized security awareness testing
 
@@ -158,7 +158,16 @@ diagnose-email-delivery.ps1 # Combined Google + M365 delivery trace with DNS che
 check-email-delivery.ps1   # OAuth device flow email checker via Graph API
 run-diagnose.ps1           # Wrapper to connect Exchange and run diagnostics
 gui-test.ps1               # Minimal WinForms test (debugging)
-templates/                 # Email & landing page HTML templates
+templates/                 # Email templates, landing pages (HTML), and API payloads (JSON)
+```
+
+## Documentation
+
+```
+README.md                   # Installation & usage guide
+PHISHING_CAMPAIGN_GUIDE.md  # Step-by-step campaign execution guide
+PROJECT_SCOPE.md            # Feature completion tracking
+.gitignore                  # Excludes gophish.db
 ```
 
 ## GoPhish Access
