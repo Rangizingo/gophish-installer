@@ -10,7 +10,7 @@ public class TrustAll7 : ICertificatePolicy {
 
 $h = @{ Authorization = 'Bearer 38154aafd6867378cb200f31661aa4ed524bb64aa8d91f6d1ad0d61fb8f695fa' }
 
-$campaign = Invoke-RestMethod -Uri 'https://localhost:3333/api/campaigns/4' -Headers $h
+$campaign = Invoke-RestMethod -Uri 'https://localhost:3333/api/campaigns/6' -Headers $h
 
 Write-Host "=== Campaign: $($campaign.name) ===" -ForegroundColor Cyan
 Write-Host "Status: $($campaign.status)" -ForegroundColor Yellow

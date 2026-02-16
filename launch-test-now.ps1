@@ -13,7 +13,7 @@ $h = @{ Authorization = 'Bearer 38154aafd6867378cb200f31661aa4ed524bb64aa8d91f6d
 # Update group to just Peter
 $groupBody = @{
     id = 1
-    name = "Restaurant Equippers IT Test"
+    name = "IT Dept Test Group"
     targets = @(
         @{ email = "pblanco@equippers.com"; first_name = "Peter"; last_name = "Blanco"; position = "IT Manager" }
     )
@@ -29,12 +29,12 @@ $body = @{
     template = @{ name = "Password Expiration Notice" }
     page = @{ name = "Microsoft 365 Login" }
     smtp = @{ name = "Gmail - Demo" }
-    url = "https://propose-duke-procedure-relate.trycloudflare.com"
-    groups = @( @{ name = "Restaurant Equippers IT Test" } )
+    url = "https://mazda-savings-advisory-glasses.trycloudflare.com"
+    groups = @( @{ name = "IT Dept Test Group" } )
 } | ConvertTo-Json -Depth 5
 
 Write-Host "Launching campaign..." -ForegroundColor Yellow
 $result = Invoke-RestMethod -Uri 'https://localhost:3333/api/campaigns/' -Method POST -Headers $h -Body $body
 Write-Host "Campaign ID: $($result.id) - Status: $($result.status)" -ForegroundColor Green
 Write-Host "Sent to: pblanco@equippers.com" -ForegroundColor Green
-Write-Host "Tunnel URL: https://propose-duke-procedure-relate.trycloudflare.com" -ForegroundColor Cyan
+Write-Host "Tunnel URL: https://mazda-savings-advisory-glasses.trycloudflare.com" -ForegroundColor Cyan

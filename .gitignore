@@ -1,2 +1,6 @@
 gophish.db
 tunnel.log
+# Temp/debug scripts and payloads
+current-*.html
+template-payload.json
+landing-payload.json

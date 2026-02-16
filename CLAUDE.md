@@ -146,10 +146,14 @@ powershell -STA -ExecutionPolicy Bypass -File .\email-admin-gui.ps1
 ```
 email-admin-gui.ps1        # All-in-one GUI for campaign & email management
 setup-gophish.ps1          # Initial GoPhish API automation (templates, groups, SMTP)
+update-gophish.py          # Push templates to GoPhish API (Python - reliable JSON encoding)
 launch-campaign.ps1        # CLI campaign launcher with Cloudflare tunnel URL
+launch-test-now.ps1        # Quick single-target test campaign launcher
 send-peter-only.ps1        # Single-target campaign launcher (Peter only)
 send-gmail-test.ps1        # Gmail test campaign launcher
+check-api.ps1              # Quick check of all GoPhish API objects (templates, pages, SMTP, groups)
 check-campaign.ps1         # Campaign results checker
+check-now.ps1              # Check latest campaign results and timeline
 update-template.ps1        # GoPhish template management via API
 clear-envelope.ps1         # Clear envelope sender on SMTP profile
 start-tunnel.ps1           # Start Cloudflare tunnel and capture URL
@@ -158,7 +162,9 @@ diagnose-email-delivery.ps1 # Combined Google + M365 delivery trace with DNS che
 check-email-delivery.ps1   # OAuth device flow email checker via Graph API
 run-diagnose.ps1           # Wrapper to connect Exchange and run diagnostics
 gui-test.ps1               # Minimal WinForms test (debugging)
-templates/                 # Email templates, landing pages (HTML), and API payloads (JSON)
+templates/
+  email-template.html      # Red-branded Equippers password expiration email (Outlook-safe)
+  landing-page.html        # M365 login credential capture page (red/black theme)
 ```
 
 ## Documentation
@@ -167,7 +173,7 @@ templates/                 # Email templates, landing pages (HTML), and API payl
 README.md                   # Installation & usage guide
 PHISHING_CAMPAIGN_GUIDE.md  # Step-by-step campaign execution guide
 PROJECT_SCOPE.md            # Feature completion tracking
-.gitignore                  # Excludes gophish.db
+.gitignore                  # Excludes gophish.db, tunnel.log
 ```
 
 ## GoPhish Access
@@ -175,7 +181,7 @@ PROJECT_SCOPE.md            # Feature completion tracking
 - **Admin UI:** https://localhost:3333
 - **API Key:** Stored in email-admin-gui.ps1 config section
 - **Landing page:** http://localhost:80 (use Cloudflare Tunnel for remote access)
-- **SMTP:** Google Workspace SMTP Relay (smtp-relay.gmail.com:587, IP-based auth)
+- **SMTP Profile:** "Blanco IT Services" (smtp-relay.gmail.com:587, IP-based auth)
 - **Sender domain:** blancoitservices.net
 - **Sender address:** itsupport@blancoitservices.net
 - **M365 Note:** High Confidence Phish content gets quarantined - use "Release" buttons in GUI or Setup Phish Sim Override
@@ -189,6 +195,16 @@ PROJECT_SCOPE.md            # Feature completion tracking
 - Per-user Safe Senders (TrustedSendersAndDomains) can bypass quarantine for individual mailboxes
 - Envelope sender with display name causes delivery failures - leave envelope_sender empty in GoPhish
 - Google SMTP Relay rejects sending from domains you don't own (no equippers.com spoofing)
+- Google SMTP Relay uses IP-based auth - allowed IPs: 174.105.36.233 (home), 70.61.175.62 (office)
+- If sending from a new location, add public IP in Google Admin > Gmail > Routing > SMTP Relay
+
+## Template Updates
+
+Use Python (not PowerShell) to update GoPhish templates - PowerShell's ConvertTo-Json mangles HTML:
+```bash
+cd C:\Users\pblanco\Documents\AI\gophish-installer && python update-gophish.py
+```
+GoPhish parses landing page HTML as Go templates - avoid `{{` in JavaScript (use `indexOf` instead of `includes('{{')`)
 
 ## External Dependencies
 

