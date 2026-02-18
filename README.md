@@ -1,9 +1,53 @@
 # GoPhish Installer
 
-One-stop PowerShell script to deploy GoPhish phishing simulation platform on Windows.
+Cross-platform scripts to deploy GoPhish phishing simulation platform.
 
-## Prerequisites
+## Supported Platforms
 
+| Platform | Script | Status |
+|----------|--------|--------|
+| Windows 10/11 | `install-gophish.ps1` | Full support (GUI tools included) |
+| Linux (Ubuntu/Pop!_OS/Debian) | `install-gophish.sh` | Core installer |
+
+---
+
+## Linux Installation
+
+### Prerequisites
+- Ubuntu, Pop!_OS, Debian, Fedora, or Arch-based distro
+- Internet connection
+- sudo privileges
+
+The script will automatically install Docker if needed.
+
+### Install GoPhish
+```bash
+chmod +x install-gophish.sh
+./install-gophish.sh
+```
+
+### Check Status
+```bash
+./install-gophish.sh --check
+```
+
+### Uninstall
+```bash
+./install-gophish.sh --uninstall
+```
+
+### Post-install (if Docker permission issues)
+```bash
+sudo usermod -aG docker $USER
+# Log out and back in, then:
+docker ps  # should work without sudo
+```
+
+---
+
+## Windows Installation
+
+### Prerequisites
 - Windows 10/11
 - Internet connection
 - Administrator privileges
@@ -13,23 +57,9 @@ The script will automatically install:
 - WSL2 (Windows Subsystem for Linux)
 - Docker Desktop
 
-## Installation
-
-```powershell
-# Download and run (requires admin)
-.\install-gophish.ps1
-```
-
-The script will:
-1. Check/install all prerequisites
-2. Pull the GoPhish Docker image
-3. Create and start the container
-4. Display admin credentials
-
-## Usage
-
 ### Install GoPhish
 ```powershell
+# Requires admin
 .\install-gophish.ps1
 ```
 
@@ -48,9 +78,11 @@ The script will:
 .\install-gophish.ps1 -LogPath "C:\logs\gophish-install.log" -Verbose
 ```
 
+---
+
 ## Access
 
-After installation:
+After installation (both platforms):
 
 | Service | URL |
 |---------|-----|
@@ -74,9 +106,21 @@ Default credentials are displayed after installation. **Change the password imme
 Campaign data is stored in Docker volume `gophish-data`. This persists across container restarts.
 
 To backup:
-```powershell
-docker run --rm -v gophish-data:/data -v ${PWD}:/backup alpine tar czf /backup/gophish-backup.tar.gz /data
+```bash
+docker run --rm -v gophish-data:/data -v $(pwd):/backup alpine tar czf /backup/gophish-backup.tar.gz /data
 ```
+
+## Platform-Specific Tools
+
+### Windows Only
+- `email-admin-gui.ps1` - WinForms GUI for M365 email management and campaign control
+- Exchange Online integration scripts
+- Various PowerShell diagnostic tools
+
+### Cross-Platform
+- `update-gophish.py` - Update templates via API (Python)
+- `oci-retry-launch.py` - OCI cloud deployment helper (Python)
+- `templates/` - HTML email and landing page templates
 
 ## Compliance Notice
 
@@ -92,7 +136,19 @@ Campaign data contains sensitive employee information. Handle with care.
 
 ## Troubleshooting
 
-### Docker not starting
+### Docker not starting (Linux)
+```bash
+sudo systemctl start docker
+sudo systemctl enable docker
+```
+
+### Docker permission denied (Linux)
+```bash
+sudo usermod -aG docker $USER
+# Log out and back in
+```
+
+### Docker not starting (Windows)
 - Ensure virtualization is enabled in BIOS
 - Restart after WSL2 installation
 - Check Docker Desktop logs
@@ -102,7 +158,7 @@ Campaign data contains sensitive employee information. Handle with care.
 - Edit `~/gophish/docker-compose.yml` to change ports
 
 ### Container not starting
-```powershell
+```bash
 docker logs gophish
 ```
 
