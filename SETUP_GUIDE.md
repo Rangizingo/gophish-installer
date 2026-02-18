@@ -48,6 +48,10 @@ This tool lets you send fake phishing emails to test if employees click suspicio
 
 4. **Save the admin password** shown at the end
 
+5. **Optional: Set up Cloudflare Tunnel** when prompted
+   - This gives you a permanent URL like `https://phish.yourdomain.com`
+   - Without it, you'll get random URLs that change each time
+
 ---
 
 ### Option B: Linux (Ubuntu/Pop!_OS)
@@ -72,6 +76,10 @@ This tool lets you send fake phishing emails to test if employees click suspicio
    Then log out and back in.
 
 5. **Save the admin password** shown at the end
+
+6. **Optional: Set up Cloudflare Tunnel** when prompted
+   - This gives you a permanent URL like `https://phish.yourdomain.com`
+   - Without it, you'll get random URLs that change each time
 
 ---
 
@@ -314,6 +322,19 @@ cd C:\path\to\gophish-installer
 | `email-admin-gui-linux.py` | Linux admin tool |
 | `email-admin-gui.ps1` | Windows admin tool |
 
+### Cloudflare Tunnel Commands
+```bash
+# Set up tunnel later (if skipped during install)
+./install-gophish.sh --tunnel     # Linux
+.\install-gophish.ps1 -TunnelOnly # Windows
+
+# Start your permanent tunnel
+cloudflared tunnel run gophish
+
+# Run tunnel in background (Linux)
+cloudflared tunnel run gophish &
+```
+
 ---
 
 ## Important Notes
@@ -322,7 +343,7 @@ cd C:\path\to\gophish-installer
 
 2. **Keep your computer on** while campaigns are active - the tunnel needs it
 
-3. **Old links break** when you restart the tunnel
+3. **Old links break** when you restart the tunnel (unless using a permanent Cloudflare Tunnel)
 
 4. **Get permission** before testing - this should be approved by management
 

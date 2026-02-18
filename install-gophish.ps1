@@ -3,10 +3,13 @@
     GoPhish Installer - Automated deployment for Windows
 .DESCRIPTION
     One-stop PowerShell script to deploy GoPhish phishing simulation platform
+    with optional permanent Cloudflare Tunnel setup
 .PARAMETER CheckOnly
     Show current status without making changes
 .PARAMETER Uninstall
     Remove GoPhish and optionally clean up data
+.PARAMETER TunnelOnly
+    Set up Cloudflare Tunnel only (skip GoPhish installation)
 .PARAMETER LogPath
     Path to log file for verbose output
 #>
@@ -15,6 +18,7 @@
 param(
     [switch]$CheckOnly,
     [switch]$Uninstall,
+    [switch]$TunnelOnly,
     [string]$LogPath
 )
 
@@ -388,6 +392,176 @@ function Show-GoPhishAccessInfo {
 }
 #endregion
 
+#region Cloudflare Tunnel
+function Install-CloudflaredIfNeeded {
+    Write-Host "`nChecking for cloudflared..." -ForegroundColor Cyan
+
+    $cloudflaredCmd = Get-Command cloudflared -ErrorAction SilentlyContinue
+    if ($cloudflaredCmd) {
+        Write-Host "cloudflared is already installed." -ForegroundColor Green
+        return $true
+    }
+
+    Write-Host "cloudflared not found. Installing via Chocolatey..." -ForegroundColor Yellow
+
+    try {
+        choco install cloudflared -y
+        $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
+
+        $cloudflaredCmd = Get-Command cloudflared -ErrorAction SilentlyContinue
+        if ($cloudflaredCmd) {
+            Write-Host "cloudflared installed successfully." -ForegroundColor Green
+            return $true
+        }
+        else {
+            Write-Host "ERROR: cloudflared installation completed but command not found." -ForegroundColor Red
+            return $false
+        }
+    }
+    catch {
+        Write-Host "ERROR: Failed to install cloudflared: $_" -ForegroundColor Red
+        return $false
+    }
+}
+
+function Setup-CloudflareTunnel {
+    Write-Host "`n==========================================" -ForegroundColor Cyan
+    Write-Host "   Cloudflare Tunnel Setup (Optional)" -ForegroundColor Cyan
+    Write-Host "==========================================" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "A Cloudflare Tunnel provides a permanent URL for your phishing campaigns."
+    Write-Host "Without it, you'll need to use temporary quick tunnels that change each time."
+    Write-Host ""
+
+    $response = Read-Host "Do you want to set up a permanent Cloudflare Tunnel? (y/N)"
+    if ($response -ne "y" -and $response -ne "Y") {
+        Write-Host "Skipping Cloudflare Tunnel setup." -ForegroundColor Cyan
+        Write-Host "You can set this up later by running: .\install-gophish.ps1 -TunnelOnly" -ForegroundColor Yellow
+        return
+    }
+
+    # Install cloudflared
+    if (-not (Install-CloudflaredIfNeeded)) {
+        Write-Host "Cannot continue without cloudflared." -ForegroundColor Red
+        return
+    }
+
+    # Check if already logged in
+    $certPath = Join-Path $env:USERPROFILE ".cloudflared\cert.pem"
+    if (Test-Path $certPath) {
+        Write-Host "Already logged in to Cloudflare." -ForegroundColor Green
+    }
+    else {
+        Write-Host "`nLogging in to Cloudflare..." -ForegroundColor Cyan
+        Write-Host "A browser window will open. Sign in to your Cloudflare account." -ForegroundColor Yellow
+        Write-Host ""
+
+        try {
+            cloudflared tunnel login
+            if ($LASTEXITCODE -ne 0) {
+                Write-Host "Failed to log in to Cloudflare." -ForegroundColor Red
+                return
+            }
+            Write-Host "Logged in successfully." -ForegroundColor Green
+        }
+        catch {
+            Write-Host "Failed to log in to Cloudflare: $_" -ForegroundColor Red
+            return
+        }
+    }
+
+    # Get tunnel name
+    Write-Host ""
+    $tunnelName = Read-Host "Enter a name for your tunnel (e.g., gophish)"
+    if ([string]::IsNullOrWhiteSpace($tunnelName)) {
+        $tunnelName = "gophish"
+    }
+
+    # Check if tunnel already exists
+    $existingTunnels = cloudflared tunnel list 2>&1
+    if ($existingTunnels -match $tunnelName) {
+        Write-Host "Tunnel '$tunnelName' already exists." -ForegroundColor Yellow
+        $tunnelId = ($existingTunnels | Select-String -Pattern "^([a-f0-9-]+)\s+$tunnelName" | ForEach-Object { $_.Matches.Groups[1].Value })
+        Write-Host "Using existing tunnel ID: $tunnelId" -ForegroundColor Cyan
+    }
+    else {
+        # Create tunnel
+        Write-Host "`nCreating tunnel '$tunnelName'..." -ForegroundColor Cyan
+        cloudflared tunnel create $tunnelName
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "Failed to create tunnel." -ForegroundColor Red
+            return
+        }
+        Write-Host "Tunnel created." -ForegroundColor Green
+    }
+
+    # Get tunnel ID
+    $tunnelList = cloudflared tunnel list 2>&1
+    $tunnelId = ($tunnelList | Select-String -Pattern "^([a-f0-9-]+)\s+$tunnelName" | ForEach-Object { $_.Matches.Groups[1].Value })
+
+    # Get domain for DNS routing
+    Write-Host ""
+    Write-Host "DNS Routing Setup" -ForegroundColor Cyan
+    Write-Host "Enter the subdomain you want to use (e.g., phish.yourdomain.com)"
+    Write-Host "The domain must be managed in your Cloudflare account."
+    $subdomain = Read-Host "Subdomain"
+
+    if (-not [string]::IsNullOrWhiteSpace($subdomain)) {
+        Write-Host "Setting up DNS route for $subdomain..." -ForegroundColor Cyan
+        cloudflared tunnel route dns $tunnelName $subdomain 2>&1 | Out-Null
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "DNS route created: https://$subdomain" -ForegroundColor Green
+        }
+        else {
+            Write-Host "DNS route may already exist or failed. Check Cloudflare dashboard." -ForegroundColor Yellow
+        }
+    }
+
+    # Create config file
+    $configDir = Join-Path $env:USERPROFILE ".cloudflared"
+    $configFile = Join-Path $configDir "config.yml"
+    Write-Host "`nCreating tunnel configuration..." -ForegroundColor Cyan
+
+    $configContent = @"
+tunnel: $tunnelId
+credentials-file: $configDir\$tunnelId.json
+
+ingress:
+  - hostname: $subdomain
+    service: http://localhost:80
+  - service: http_status:404
+"@
+
+    Set-Content -Path $configFile -Value $configContent -Force
+    Write-Host "Config saved to: $configFile" -ForegroundColor Green
+
+    # Show summary
+    Write-Host ""
+    Write-Host "===============================================" -ForegroundColor Green
+    Write-Host "     Cloudflare Tunnel Setup Complete!         " -ForegroundColor Green
+    Write-Host "===============================================" -ForegroundColor Green
+    Write-Host ""
+    Write-Host "Tunnel Name: $tunnelName" -ForegroundColor Cyan
+    Write-Host "Tunnel ID:   $tunnelId" -ForegroundColor Cyan
+    if (-not [string]::IsNullOrWhiteSpace($subdomain)) {
+        Write-Host "Public URL:  https://$subdomain" -ForegroundColor Cyan
+    }
+    Write-Host ""
+    Write-Host "To start the tunnel:" -ForegroundColor Cyan
+    Write-Host "  cloudflared tunnel run $tunnelName" -ForegroundColor White
+    Write-Host ""
+    Write-Host "NOTE: The tunnel must be running for phishing links to work." -ForegroundColor Yellow
+    Write-Host "===============================================" -ForegroundColor Green
+
+    # Save URL to file for GUI
+    if (-not [string]::IsNullOrWhiteSpace($subdomain)) {
+        $urlFile = Join-Path $script:GoPhishDir "tunnel_url.txt"
+        Set-Content -Path $urlFile -Value "https://$subdomain" -Force
+        Write-Host "Tunnel URL saved to: $urlFile" -ForegroundColor Cyan
+    }
+}
+#endregion
+
 #region Status Check
 function Show-GoPhishStatus {
     Write-Host "`nGoPhish Status" -ForegroundColor Cyan
@@ -497,6 +671,11 @@ if ($Uninstall) {
     exit 0
 }
 
+if ($TunnelOnly) {
+    Setup-CloudflareTunnel
+    exit 0
+}
+
 # Main installation flow
 Write-Host ""
 Write-Host "GoPhish Installer" -ForegroundColor Cyan
@@ -541,4 +720,7 @@ if (-not (Start-GoPhishContainer)) {
 # Step 7: Get credentials and show info
 $credentials = Get-GoPhishCredentials
 Show-GoPhishAccessInfo -Credentials $credentials
+
+# Step 8: Offer Cloudflare Tunnel setup
+Setup-CloudflareTunnel
 #endregion

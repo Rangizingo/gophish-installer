@@ -45,6 +45,161 @@ check_root() {
 }
 #endregion
 
+#region Cloudflare Tunnel
+install_cloudflared_if_needed() {
+    print_header "\nChecking for cloudflared..."
+
+    if command -v cloudflared &> /dev/null; then
+        print_success "cloudflared is already installed."
+        return 0
+    fi
+
+    print_warning "cloudflared not found. Installing..."
+
+    # Detect architecture
+    local arch
+    arch=$(uname -m)
+    case $arch in
+        x86_64) arch="amd64" ;;
+        aarch64) arch="arm64" ;;
+        armv7l) arch="arm" ;;
+        *) print_error "Unsupported architecture: $arch"; return 1 ;;
+    esac
+
+    # Download and install
+    local url="https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-$arch"
+    print_header "Downloading cloudflared for $arch..."
+
+    if sudo curl -L "$url" -o /usr/local/bin/cloudflared && sudo chmod +x /usr/local/bin/cloudflared; then
+        print_success "cloudflared installed successfully."
+        return 0
+    else
+        print_error "Failed to install cloudflared."
+        return 1
+    fi
+}
+
+setup_cloudflare_tunnel() {
+    print_header "\n=========================================="
+    print_header "   Cloudflare Tunnel Setup (Optional)"
+    print_header "=========================================="
+    echo ""
+    echo "A Cloudflare Tunnel provides a permanent URL for your phishing campaigns."
+    echo "Without it, you'll need to use temporary quick tunnels that change each time."
+    echo ""
+    read -p "Do you want to set up a permanent Cloudflare Tunnel? (y/N): " response
+
+    if [[ ! "$response" =~ ^[Yy]$ ]]; then
+        print_header "Skipping Cloudflare Tunnel setup."
+        print_warning "You can set this up later by running: ./install-gophish.sh --tunnel"
+        return 0
+    fi
+
+    # Install cloudflared
+    if ! install_cloudflared_if_needed; then
+        print_error "Cannot continue without cloudflared."
+        return 1
+    fi
+
+    # Check if already logged in
+    if [[ -f "$HOME/.cloudflared/cert.pem" ]]; then
+        print_success "Already logged in to Cloudflare."
+    else
+        print_header "\nLogging in to Cloudflare..."
+        print_warning "A browser window will open. Sign in to your Cloudflare account."
+        echo ""
+        if ! cloudflared tunnel login; then
+            print_error "Failed to log in to Cloudflare."
+            return 1
+        fi
+        print_success "Logged in successfully."
+    fi
+
+    # Get tunnel name
+    echo ""
+    read -p "Enter a name for your tunnel (e.g., gophish): " tunnel_name
+    tunnel_name=${tunnel_name:-gophish}
+
+    # Check if tunnel already exists
+    if cloudflared tunnel list 2>/dev/null | grep -q "$tunnel_name"; then
+        print_warning "Tunnel '$tunnel_name' already exists."
+        local existing_id
+        existing_id=$(cloudflared tunnel list 2>/dev/null | grep "$tunnel_name" | awk '{print $1}')
+        print_header "Using existing tunnel ID: $existing_id"
+    else
+        # Create tunnel
+        print_header "\nCreating tunnel '$tunnel_name'..."
+        if ! cloudflared tunnel create "$tunnel_name"; then
+            print_error "Failed to create tunnel."
+            return 1
+        fi
+        print_success "Tunnel created."
+    fi
+
+    # Get domain for DNS routing
+    echo ""
+    print_header "DNS Routing Setup"
+    echo "Enter the subdomain you want to use (e.g., phish.yourdomain.com)"
+    echo "The domain must be managed in your Cloudflare account."
+    read -p "Subdomain: " subdomain
+
+    if [[ -n "$subdomain" ]]; then
+        print_header "Setting up DNS route for $subdomain..."
+        if cloudflared tunnel route dns "$tunnel_name" "$subdomain" 2>/dev/null; then
+            print_success "DNS route created: https://$subdomain"
+        else
+            print_warning "DNS route may already exist or failed. Check Cloudflare dashboard."
+        fi
+    fi
+
+    # Create config file
+    local config_file="$HOME/.cloudflared/config.yml"
+    print_header "\nCreating tunnel configuration..."
+
+    local tunnel_id
+    tunnel_id=$(cloudflared tunnel list 2>/dev/null | grep "$tunnel_name" | awk '{print $1}')
+
+    cat > "$config_file" << EOF
+tunnel: $tunnel_id
+credentials-file: $HOME/.cloudflared/$tunnel_id.json
+
+ingress:
+  - hostname: $subdomain
+    service: http://localhost:80
+  - service: http_status:404
+EOF
+
+    print_success "Config saved to: $config_file"
+
+    # Show summary
+    echo ""
+    print_success "==============================================="
+    print_success "     Cloudflare Tunnel Setup Complete!         "
+    print_success "==============================================="
+    echo ""
+    print_header "Tunnel Name: $tunnel_name"
+    print_header "Tunnel ID:   $tunnel_id"
+    if [[ -n "$subdomain" ]]; then
+        print_header "Public URL:  https://$subdomain"
+    fi
+    echo ""
+    print_header "To start the tunnel:"
+    echo "  cloudflared tunnel run $tunnel_name"
+    echo ""
+    print_header "Or run in background:"
+    echo "  cloudflared tunnel run $tunnel_name &"
+    echo ""
+    print_warning "NOTE: The tunnel must be running for phishing links to work."
+    print_success "==============================================="
+
+    # Save URL to file for GUI
+    if [[ -n "$subdomain" ]]; then
+        echo "https://$subdomain" > "$GOPHISH_DIR/tunnel_url.txt"
+        print_header "Tunnel URL saved to: $GOPHISH_DIR/tunnel_url.txt"
+    fi
+}
+#endregion
+
 #region Docker Installation
 install_docker_if_needed() {
     print_header "\nChecking for Docker..."
@@ -321,12 +476,17 @@ main() {
             uninstall_gophish
             exit 0
             ;;
+        --tunnel|-t)
+            setup_cloudflare_tunnel
+            exit 0
+            ;;
         --help|-h)
             echo "Usage: $0 [OPTIONS]"
             echo ""
             echo "Options:"
             echo "  --check, -c      Show GoPhish status"
             echo "  --uninstall, -u  Remove GoPhish"
+            echo "  --tunnel, -t     Set up Cloudflare Tunnel only"
             echo "  --help, -h       Show this help message"
             echo ""
             echo "Without options, installs GoPhish."
@@ -352,6 +512,9 @@ main() {
     local password
     password=$(get_gophish_credentials)
     show_access_info "$password"
+
+    # Offer Cloudflare Tunnel setup
+    setup_cloudflare_tunnel
 }
 
 main "$@"
