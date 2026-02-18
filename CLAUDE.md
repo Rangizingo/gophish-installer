@@ -4,7 +4,7 @@ This file provides guidance to Claude Code when working with this repository.
 
 ## Project Overview
 
-**gophish-installer** - One-stop PowerShell script to deploy GoPhish phishing simulation platform on Windows machines.
+**gophish-installer** - GoPhish phishing simulation platform deployment and campaign management toolkit.
 
 ## Purpose
 
@@ -15,6 +15,7 @@ Automate complete GoPhish setup:
 - Provide ready-to-campaign environment
 - Deploy and manage phishing simulation campaigns
 - Email delivery diagnostics for M365/Google Workspace
+- Migrate to Oracle Cloud Always Free tier for permanent hosting
 
 ## Target Environment
 
@@ -162,9 +163,14 @@ diagnose-email-delivery.ps1 # Combined Google + M365 delivery trace with DNS che
 check-email-delivery.ps1   # OAuth device flow email checker via Graph API
 run-diagnose.ps1           # Wrapper to connect Exchange and run diagnostics
 gui-test.ps1               # Minimal WinForms test (debugging)
+oci-retry-launch.py        # Retry OCI ARM instance launch until capacity available
 templates/
   email-template.html      # Red-branded Equippers password expiration email (Outlook-safe)
   landing-page.html        # M365 login credential capture page (red/black theme)
+  api-payload-landing.json  # Landing page API payload for GoPhish
+  email-payload.json        # Email template API payload for GoPhish
+  email-payload-v3.json     # Email template API payload v3
+  landing-payload.json      # Landing page payload for GoPhish
 ```
 
 ## Documentation
@@ -173,7 +179,8 @@ templates/
 README.md                   # Installation & usage guide
 PHISHING_CAMPAIGN_GUIDE.md  # Step-by-step campaign execution guide
 PROJECT_SCOPE.md            # Feature completion tracking
-.gitignore                  # Excludes gophish.db, tunnel.log
+plan.md                     # OCI cloud migration plan and task tracking
+.gitignore                  # Excludes gophish.db, tunnel.log, .playwright-mcp/
 ```
 
 ## GoPhish Access
@@ -205,6 +212,16 @@ Use Python (not PowerShell) to update GoPhish templates - PowerShell's ConvertTo
 cd C:\Users\pblanco\Documents\AI\gophish-installer && python update-gophish.py
 ```
 GoPhish parses landing page HTML as Go templates - avoid `{{` in JavaScript (use `indexOf` instead of `includes('{{')`)
+
+## OCI Cloud Migration (In Progress)
+
+Migrating from local Docker + Cloudflare Tunnel to Oracle Cloud Always Free tier:
+- **Target:** ARM VM (VM.Standard.A1.Flex, 1 OCPU, 6 GB RAM) in US-Chicago
+- **Domain:** portal.blancoitsolutions.com → Oracle Cloud public IP
+- **Script:** `oci-retry-launch.py` retries instance creation across availability domains
+- **Plan:** See `plan.md` for full migration steps
+- **Cost:** $0/month (Always Free tier)
+- **Eliminates:** Cloudflare tunnel, Docker Desktop, port 7844 firewall issues, random URLs
 
 ## External Dependencies
 
