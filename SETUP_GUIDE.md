@@ -4,6 +4,46 @@ A simple guide to running phishing awareness tests for your organization.
 
 ---
 
+## Quick Start (New PC)
+
+If you're setting up on a fresh computer, here's everything in one place:
+
+### Linux
+```bash
+git clone https://github.com/Rangizingo/gophish-installer.git
+cd gophish-installer
+chmod +x install-gophish.sh
+./install-gophish.sh
+# Say "y" when asked about Cloudflare Tunnel
+# Save the admin password!
+
+sudo apt install python3-tk
+cloudflared tunnel run gophish &
+python3 email-admin-gui-linux.py
+```
+
+### Windows (Run as Administrator)
+```powershell
+git clone https://github.com/Rangizingo/gophish-installer.git
+cd gophish-installer
+.\install-gophish.ps1
+# Say "y" when asked about Cloudflare Tunnel
+# Save the admin password!
+
+cloudflared tunnel run gophish
+.\email-admin-gui.ps1
+```
+
+### Every Day After Setup
+| What | How |
+|------|-----|
+| Start GoPhish | `cd ~/gophish && docker compose up -d` |
+| Start Tunnel | `cloudflared tunnel run gophish` |
+| Open Admin Tool | `python3 email-admin-gui-linux.py` (Linux) or `.\email-admin-gui.ps1` (Windows) |
+| GoPhish Web UI | https://localhost:3333 |
+
+---
+
 ## What This Does
 
 This tool lets you send fake phishing emails to test if employees click suspicious links. When someone clicks the link and enters their password, you'll see it in a report. **No actual harm is done** - it's for training purposes.

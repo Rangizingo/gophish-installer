@@ -2,6 +2,56 @@
 
 Cross-platform scripts to deploy GoPhish phishing simulation platform.
 
+## Quick Start (New PC)
+
+### Linux (Ubuntu/Pop!_OS/Debian)
+```bash
+# 1. Clone and run installer
+git clone https://github.com/Rangizingo/gophish-installer.git
+cd gophish-installer
+chmod +x install-gophish.sh
+./install-gophish.sh
+
+# 2. Save the admin password shown at the end
+
+# 3. When prompted for Cloudflare Tunnel, say "y" and enter your subdomain
+
+# 4. Install tkinter for the GUI
+sudo apt install python3-tk
+
+# 5. Start tunnel and GUI (when ready for campaigns)
+cloudflared tunnel run gophish &
+python3 email-admin-gui-linux.py
+```
+
+### Windows
+```powershell
+# 1. Clone and run installer (as Admin)
+git clone https://github.com/Rangizingo/gophish-installer.git
+cd gophish-installer
+.\install-gophish.ps1
+
+# 2. Save the admin password shown at the end
+
+# 3. When prompted for Cloudflare Tunnel, say "y" and enter your subdomain
+
+# 4. Start tunnel and GUI (when ready for campaigns)
+cloudflared tunnel run gophish
+.\email-admin-gui.ps1
+```
+
+### Daily Use Commands
+| Task | Command |
+|------|---------|
+| Start GoPhish | `cd ~/gophish && docker compose up -d` |
+| Start Tunnel | `cloudflared tunnel run gophish` |
+| Open GUI (Linux) | `python3 email-admin-gui-linux.py` |
+| Open GUI (Windows) | `.\email-admin-gui.ps1` |
+| Check status | `./install-gophish.sh --check` |
+| GoPhish Admin | https://localhost:3333 |
+
+---
+
 ## Supported Platforms
 
 | Platform | Script | Status |
