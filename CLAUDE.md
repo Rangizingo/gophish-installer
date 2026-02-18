@@ -19,24 +19,26 @@ Automate complete GoPhish setup:
 
 ## Target Environment
 
-- **OS:** Windows 10/11 only
+- **OS:** Windows 10/11, Linux (Ubuntu/Pop!_OS/Debian/Fedora/Arch)
 - **Users:** IT department (1-5 machines)
 - **Compliance:** PCI-DSS, SOC2
 
 ## Architecture
 
 ```
-install-gophish.ps1
-├── Prerequisites check (Docker, WSL2, Chocolatey)
-├── Install missing components via Chocolatey
+install-gophish.ps1 / install-gophish.sh
+├── Prerequisites check (Docker, WSL2/systemd, Chocolatey/apt)
+├── Install missing components
 ├── Pull GoPhish Docker image
 ├── Configure container with default volumes
 ├── Start services
-└── Display access credentials
+├── Display access credentials
+└── Optional: Set up permanent Cloudflare Tunnel
 ```
 
 ## Commands
 
+### Windows (PowerShell)
 ```powershell
 # Run installer (requires admin)
 .\install-gophish.ps1
@@ -46,6 +48,24 @@ install-gophish.ps1
 
 # Uninstall
 .\install-gophish.ps1 -Uninstall
+
+# Set up Cloudflare Tunnel only
+.\install-gophish.ps1 -TunnelOnly
+```
+
+### Linux (Bash)
+```bash
+# Run installer
+./install-gophish.sh
+
+# Check status
+./install-gophish.sh --check
+
+# Uninstall
+./install-gophish.sh --uninstall
+
+# Set up Cloudflare Tunnel only
+./install-gophish.sh --tunnel
 ```
 
 ## Key Design Decisions
@@ -65,14 +85,25 @@ install-gophish.ps1
 
 ## Email Admin GUI
 
-**`email-admin-gui.ps1`** - Comprehensive WinForms GUI for managing phishing campaigns and M365 email delivery.
+Cross-platform GUI tools for managing phishing campaigns and M365 email delivery.
 
-### Launch
+### Windows: `email-admin-gui.ps1`
+WinForms-based GUI with full M365 integration.
 
 ```powershell
 # From cmd.exe (required - not PowerShell ISE):
 powershell -STA -ExecutionPolicy Bypass -File .\email-admin-gui.ps1
 ```
+
+### Linux: `email-admin-gui-linux.py`
+Python Tkinter GUI with equivalent functionality.
+
+```bash
+cd ~/Documents/AI/gophish-installer
+python3 email-admin-gui-linux.py
+```
+
+**Requirements:** `sudo apt install python3-tk`
 
 ### GUI Sections & Buttons
 
@@ -145,7 +176,8 @@ powershell -STA -ExecutionPolicy Bypass -File .\email-admin-gui.ps1
 ## Campaign Tooling Scripts
 
 ```
-email-admin-gui.ps1        # All-in-one GUI for campaign & email management
+email-admin-gui.ps1        # Windows WinForms GUI for campaign & email management
+email-admin-gui-linux.py   # Linux Tkinter GUI (equivalent functionality)
 setup-gophish.ps1          # Initial GoPhish API automation (templates, groups, SMTP)
 update-gophish.py          # Push templates to GoPhish API (Python - reliable JSON encoding)
 launch-campaign.ps1        # CLI campaign launcher with Cloudflare tunnel URL
@@ -192,6 +224,48 @@ plan.md                     # OCI cloud migration plan and task tracking
 - **Sender domain:** blancoitservices.net
 - **Sender address:** itsupport@blancoitservices.net
 - **M365 Note:** High Confidence Phish content gets quarantined - use "Release" buttons in GUI or Setup Phish Sim Override
+
+## Cloudflare Tunnel
+
+The install scripts include optional permanent Cloudflare Tunnel setup for fixed campaign URLs.
+
+### Current Configuration
+- **Tunnel Name:** gophish
+- **Tunnel ID:** be9f9ec3-cd9f-4e82-9f3a-0b4933c37912
+- **Public URL:** https://phish.blancoitsolutions.com
+- **Config File:** ~/.cloudflared/config.yml
+- **Credentials:** ~/.cloudflared/<tunnel-id>.json
+
+### Tunnel Commands
+```bash
+# Start tunnel (foreground)
+cloudflared tunnel run gophish
+
+# Start tunnel (background - Linux)
+cloudflared tunnel run gophish &
+
+# Check tunnel status
+cloudflared tunnel list
+
+# View tunnel info
+cloudflared tunnel info gophish
+```
+
+### Setup Flow (built into install scripts)
+1. Install cloudflared (auto via apt/chocolatey)
+2. Browser login to Cloudflare account
+3. Create named tunnel
+4. Route DNS to subdomain
+5. Save config to ~/.cloudflared/config.yml
+6. Save tunnel URL to ~/gophish/tunnel_url.txt
+
+### Quick vs Permanent Tunnels
+| Feature | Quick Tunnel | Permanent Tunnel |
+|---------|--------------|------------------|
+| URL | Random (changes) | Fixed subdomain |
+| Old links | Break on restart | Always work |
+| Setup | `cloudflared tunnel --url` | One-time via installer |
+| Use case | Testing | Production campaigns |
 
 ## Email Delivery Notes
 

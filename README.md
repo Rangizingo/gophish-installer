@@ -80,6 +80,48 @@ The script will automatically install:
 
 ---
 
+## Cloudflare Tunnel Setup (Optional)
+
+Both install scripts offer to set up a **permanent Cloudflare Tunnel** after GoPhish installs. This gives you a fixed URL like `https://phish.yourdomain.com` instead of random URLs that change each time.
+
+### During Installation
+You'll be prompted: "Do you want to set up a permanent Cloudflare Tunnel?"
+- If yes, a browser opens for Cloudflare login
+- Enter a tunnel name (default: `gophish`)
+- Enter your subdomain (e.g., `phish.yourdomain.com`)
+- Config is saved to `~/.cloudflared/config.yml`
+
+### Set Up Tunnel Later
+```bash
+# Linux
+./install-gophish.sh --tunnel
+
+# Windows
+.\install-gophish.ps1 -TunnelOnly
+```
+
+### Start Your Tunnel
+```bash
+# Foreground (see logs)
+cloudflared tunnel run gophish
+
+# Background (Linux)
+cloudflared tunnel run gophish &
+
+# Background (Windows - new terminal)
+Start-Process cloudflared -ArgumentList "tunnel run gophish" -WindowStyle Hidden
+```
+
+### Benefits of Permanent Tunnel
+| Feature | Quick Tunnel | Permanent Tunnel |
+|---------|--------------|------------------|
+| URL | Random (changes each time) | Fixed (e.g., `phish.yourdomain.com`) |
+| Old campaign links | Break on restart | Always work |
+| Setup | None | One-time Cloudflare login |
+| DNS | Auto | Routes to your domain |
+
+---
+
 ## Access
 
 After installation (both platforms):
@@ -88,6 +130,7 @@ After installation (both platforms):
 |---------|-----|
 | Admin UI | https://localhost:3333 |
 | Phishing Server | http://localhost:80 |
+| Landing Page (with tunnel) | Your configured subdomain |
 
 Default credentials are displayed after installation. **Change the password immediately.**
 
@@ -112,10 +155,14 @@ docker run --rm -v gophish-data:/data -v $(pwd):/backup alpine tar czf /backup/g
 
 ## Platform-Specific Tools
 
-### Windows Only
+### Windows
 - `email-admin-gui.ps1` - WinForms GUI for M365 email management and campaign control
 - Exchange Online integration scripts
 - Various PowerShell diagnostic tools
+
+### Linux
+- `email-admin-gui-linux.py` - Tkinter GUI (equivalent to Windows version)
+- Requires: `sudo apt install python3-tk`
 
 ### Cross-Platform
 - `update-gophish.py` - Update templates via API (Python)
