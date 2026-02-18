@@ -4,3 +4,4 @@ tunnel.log
 current-*.html
 template-payload.json
 landing-payload.json
+.playwright-mcp/
