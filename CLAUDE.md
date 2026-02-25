@@ -198,7 +198,8 @@ gui-test.ps1               # Minimal WinForms test (debugging)
 oci-retry-launch.py        # Retry OCI ARM instance launch until capacity available
 templates/
   email-template.html      # Red-branded Equippers password expiration email (Outlook-safe)
-  landing-page.html        # M365 login credential capture page (red/black theme)
+  landing-page.html        # M365 login credential capture page with post-submit confirmation (red/black theme)
+  password-changed-confirm.html  # Standalone preview of confirmation screen (design reference)
   api-payload-landing.json  # Landing page API payload for GoPhish
   email-payload.json        # Email template API payload for GoPhish
   email-payload-v3.json     # Email template API payload v3
@@ -218,11 +219,12 @@ plan.md                     # OCI cloud migration plan and task tracking
 ## GoPhish Access
 
 - **Admin UI:** https://localhost:3333
-- **API Key:** Stored in email-admin-gui.ps1 config section
-- **Landing page:** http://localhost:80 (use Cloudflare Tunnel for remote access)
-- **SMTP Profile:** "Blanco IT Services" (smtp-relay.gmail.com:587, IP-based auth)
-- **Sender domain:** blancoitservices.net
-- **Sender address:** itsupport@blancoitservices.net
+- **API Key:** Stored in email-admin-gui.ps1 config section (rotated 2026-02-25)
+- **Landing page:** http://localhost:80 (use Cloudflare Tunnel or external VM for remote access)
+- **SMTP Profile:** "support@expertimportersllc.com" (mail.expertimportersllc.com:465, user/pass auth)
+- **Sender domain:** expertimportersllc.com (DNS: SPF, DKIM, DMARC configured via Epik)
+- **Sender address:** support@expertimportersllc.com
+- **Previous sender:** itsupport@blancoitservices.net (Google SMTP Relay, deprecated)
 - **M365 Note:** High Confidence Phish content gets quarantined - use "Release" buttons in GUI or Setup Phish Sim Override
 
 ## Cloudflare Tunnel
@@ -275,9 +277,19 @@ cloudflared tunnel info gophish
 - **Working solutions:** Manual quarantine release via GUI, or Advanced Delivery PhishSimOverridePolicy
 - Per-user Safe Senders (TrustedSendersAndDomains) can bypass quarantine for individual mailboxes
 - Envelope sender with display name causes delivery failures - leave envelope_sender empty in GoPhish
-- Google SMTP Relay rejects sending from domains you don't own (no equippers.com spoofing)
-- Google SMTP Relay uses IP-based auth - allowed IPs: 174.105.36.233 (home), 70.61.175.62 (office)
-- If sending from a new location, add public IP in Google Admin > Gmail > Routing > SMTP Relay
+- expertimportersllc.com emails land in inbox (tested 2026-02-25) — SPF/DKIM/DMARC all configured
+- **Previous sender (deprecated):** Google SMTP Relay (IP-based auth, blancoitservices.net)
+
+## Landing Page Flow
+
+1. Target clicks phishing link → M365-styled login page (Restaurant Equippers branded)
+2. Target enters password → form submits via AJAX (GoPhish captures credentials)
+3. "Verifying credentials..." spinner (2 seconds)
+4. "Password updated" confirmation screen with green checkmark
+5. Progress bar + 8-second countdown → auto-redirect to restaurantequippers.sharepoint.com
+6. "Continue to SharePoint" button as manual fallback
+
+**Key technical detail:** Form uses `XMLHttpRequest` to POST credentials in background so the page stays loaded for the confirmation screen. Default GoPhish form POST would redirect immediately, skipping the confirmation.
 
 ## Template Updates
 
@@ -286,6 +298,15 @@ Use Python (not PowerShell) to update GoPhish templates - PowerShell's ConvertTo
 cd C:\Users\pblanco\Documents\AI\gophish-installer && python update-gophish.py
 ```
 GoPhish parses landing page HTML as Go templates - avoid `{{` in JavaScript (use `indexOf` instead of `includes('{{')`)
+
+## DNS Records (expertimportersllc.com)
+
+- **Registrar:** Epik (DNS managed via Epik console)
+- **MX:** mail.expertimportersllc.com (priority 10)
+- **SPF:** `v=spf1 +a +mx +ip4:66.223.49.32 +ip4:66.223.49.33 include:_spf.epikwebhosting.com ~all`
+- **DKIM:** Two RSA keys at `default._domainkey`
+- **DMARC:** `v=DMARC1; p=none; rua=mailto:support@expertimportersllc.com`
+- **Note:** Had duplicate SPF record (`v=spf1 a mx ~all`) — removed 2026-02-25
 
 ## OCI Cloud Migration (In Progress)
 

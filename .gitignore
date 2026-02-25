@@ -5,3 +5,6 @@ current-*.html
 template-payload.json
 landing-payload.json
 .playwright-mcp/
+backup/
+_*.ps1
+_*.py
