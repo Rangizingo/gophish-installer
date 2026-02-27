@@ -212,9 +212,10 @@ templates/
 ```
 Ubuntu-GoPhish-Migration/
   plan.md                    # Full deployment plan for Ubuntu Desktop VM on ESXi
-  setup-gophish.sh           # Automated setup: GoPhish + cloudflared + restore + tunnel
+  setup-gophish.sh           # Fresh VM setup: GoPhish + cloudflared + data restore + tunnel
+  restore-gophish.sh         # Restore from backup tarball onto a VM with GoPhish binary
   email-template.html        # Email template (copy for server)
-  landing-page.html          # Landing page (copy for server)
+  landing-page.html          # Landing page with AJAX submit + confirmation screen (copy for server)
 
 Windows-Server-2019-Go-Phish-Migration/   # (Abandoned — GoPhish binary bugs, CGO issues)
   plan.md                    # Original Windows Server deployment plan

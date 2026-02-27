@@ -152,6 +152,7 @@ phase_install() {
     },
     "db_name": "sqlite3",
     "db_path": "gophish.db",
+    "migrations_prefix": "db/db_",
     "contact_address": ""
 }
 CONFIGEOF
@@ -162,6 +163,8 @@ CONFIGEOF
     if systemctl is-active --quiet gophish 2>/dev/null; then
         skip "GoPhish service already running"
     else
+        # Stop if in failed/crash-looping state
+        systemctl stop gophish 2>/dev/null || true
         cat > /etc/systemd/system/gophish.service << 'SVCEOF'
 [Unit]
 Description=GoPhish Phishing Framework
