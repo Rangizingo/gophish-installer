@@ -168,7 +168,7 @@ python3 email-admin-gui-linux.py
 | Change Sender | Update GoPhish sending profile from address via input dialog |
 
 ### GUI Config (hardcoded at top of script)
-- **Sender:** itsupport@blancoitservices.net
+- **Sender:** support@expertimportersllc.com
 - **GoPhish API:** https://localhost:3333/api
 - **Targets:** pblanco@equippers.com, kmarchese@equippers.com, mfrank@equippers.com
 - Dark theme with red (#c41230) section headers, green terminal output
@@ -195,6 +195,7 @@ diagnose-email-delivery.ps1 # Combined Google + M365 delivery trace with DNS che
 check-email-delivery.ps1   # OAuth device flow email checker via Graph API
 run-diagnose.ps1           # Wrapper to connect Exchange and run diagnostics
 gui-test.ps1               # Minimal WinForms test (debugging)
+send-report.py             # Email campaign results report generator
 oci-retry-launch.py        # Retry OCI ARM instance launch until capacity available
 templates/
   email-template.html      # Red-branded Equippers password expiration email (Outlook-safe)
@@ -206,13 +207,31 @@ templates/
   landing-payload.json      # Landing page payload for GoPhish
 ```
 
+## Migration Plans
+
+```
+Ubuntu-GoPhish-Migration/
+  plan.md                    # Full deployment plan for Ubuntu Desktop VM on ESXi
+  setup-gophish.sh           # Automated setup: GoPhish + cloudflared + restore + tunnel
+  email-template.html        # Email template (copy for server)
+  landing-page.html          # Landing page (copy for server)
+
+Windows-Server-2019-Go-Phish-Migration/   # (Abandoned — GoPhish binary bugs, CGO issues)
+  plan.md                    # Original Windows Server deployment plan
+  setup-gophish-server.ps1   # PowerShell setup script (build from source)
+  diag-gophish.ps1           # GoPhish diagnostic script
+  fix-config.ps1             # Config/VERSION file fixer
+  email-template.html        # Email template (copy for server)
+  landing-page.html          # Landing page (copy for server)
+```
+
 ## Documentation
 
 ```
 README.md                   # Installation & usage guide
 PHISHING_CAMPAIGN_GUIDE.md  # Step-by-step campaign execution guide
 PROJECT_SCOPE.md            # Feature completion tracking
-plan.md                     # OCI cloud migration plan and task tracking
+plan.md                     # OCI cloud migration plan (superseded by Ubuntu VM plan)
 .gitignore                  # Excludes gophish.db, tunnel.log, .playwright-mcp/
 ```
 
@@ -308,15 +327,16 @@ GoPhish parses landing page HTML as Go templates - avoid `{{` in JavaScript (use
 - **DMARC:** `v=DMARC1; p=none; rua=mailto:support@expertimportersllc.com`
 - **Note:** Had duplicate SPF record (`v=spf1 a mx ~all`) — removed 2026-02-25
 
-## OCI Cloud Migration (In Progress)
+## Server Migration (In Progress)
 
-Migrating from local Docker + Cloudflare Tunnel to Oracle Cloud Always Free tier:
-- **Target:** ARM VM (VM.Standard.A1.Flex, 1 OCPU, 6 GB RAM) in US-Chicago
-- **Domain:** portal.blancoitsolutions.com → Oracle Cloud public IP
-- **Script:** `oci-retry-launch.py` retries instance creation across availability domains
-- **Plan:** See `plan.md` for full migration steps
-- **Cost:** $0/month (Always Free tier)
-- **Eliminates:** Cloudflare tunnel, Docker Desktop, port 7844 firewall issues, random URLs
+Migrating from local Docker + Cloudflare quick tunnels to a dedicated Ubuntu VM on ESXi:
+- **Target:** Ubuntu 24.04 Desktop VM on datacenter ESXi host
+- **Domain:** portal.expertimportersllc.com → Cloudflare named tunnel (CNAME at Epik)
+- **Setup script:** `Ubuntu-GoPhish-Migration/setup-gophish.sh`
+- **Plan:** See `Ubuntu-GoPhish-Migration/plan.md` for full steps
+- **Access:** RDP via TeamViewer — all management done on-box
+- **Eliminates:** Docker Desktop, quick tunnels (random URLs), port 7844 office firewall issues
+- **Previous attempts:** OCI Always Free (capacity unavailable), Windows Server 2019 (GoPhish binary bugs)
 
 ## External Dependencies
 
