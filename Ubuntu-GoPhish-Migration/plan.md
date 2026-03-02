@@ -1,83 +1,35 @@
 # GoPhish Deployment — Ubuntu VM
 
-## Current Status (2026-02-27)
+## Current Status (2026-02-26)
 
 **Completed:**
-- [x] Created Ubuntu 24.04 Desktop VM on ESXi host
+- [x] Created Ubuntu Desktop VM on ESXi host
 - [x] Ubuntu installed, local account created
 - [x] Static IP configured (set DHCP-assigned IP as manual)
 - [x] `sudo apt update && sudo apt upgrade -y`
-- [x] TeamViewer installed for remote access (xrdp had black screen issues)
-- [x] Phase 1: GoPhish installed and running as systemd service
-- [x] Phase 2: Campaign data restored (templates, landing page, groups, SMTP profile)
-- [x] GoPhish admin UI accessible at https://localhost:3333
-- [x] Phish server running on port 80
-- [x] Cloudflared installed
-- [x] Sleep/suspend disabled on VM
+- [x] xrdp installed and enabled
+- [x] Wayland disabled (`WaylandEnable=false` in `/etc/gdm3/custom.conf`)
+- [x] Added `DefaultSession=gnome-xorg.desktop` to force X11
+
+**In Progress:**
+- [ ] RDP showing black screen — may need reboot after X11 config, or log out of ESXi console session first before RDP'ing in. Try: log out from ESXi console, then RDP.
 
 **Not Started:**
+- [ ] Phase 1: Install GoPhish
+- [ ] Phase 2: Restore GoPhish Data
 - [ ] Phase 3: Firewall (ufw)
-- [ ] Phase 4: Cloudflare Named Tunnel (portal.expertimportersllc.com)
+- [ ] Phase 4: Cloudflare Named Tunnel
 - [ ] Phase 5: SSL/TLS
 - [ ] Phase 6: Verification
-- [ ] Enter SMTP password in GoPhish UI (Sending Profiles)
-- [ ] Send test campaign to pblanco@equippers.com
+- [ ] Phase 7: Set Up Working Environment
 - [ ] Domain join (optional)
 - [ ] Sophos agent install (add `/opt/gophish/` exclusion first)
 - [ ] Patch manager agent install
 
-**Troubleshooting Notes:**
-- GoPhish exit code 1 on first start: missing `migrations_prefix` in config.json — fixed by adding `"migrations_prefix": "db/db_"`
-- xrdp black screen: Wayland/X11 issues on Ubuntu 24.04 — use TeamViewer instead
-- Line ending errors running .sh scripts cloned on Windows: run `sed -i 's/\r$//' script.sh` or use `.gitattributes` with `*.sh text eol=lf`
-
-## Scripts
-
-This folder contains two scripts for deploying GoPhish on any fresh Ubuntu VM:
-
-### `setup-gophish.sh` — Full Setup (Fresh VM)
-Installs GoPhish from scratch on a clean Ubuntu VM. Handles everything:
-- Installs prerequisites (curl, unzip, jq, python3, git, cloudflared)
-- Downloads latest GoPhish Linux binary from GitHub
-- Writes config.json with correct `migrations_prefix`
-- Creates systemd service, extracts temp admin password
-- Restores email template, landing page, target group, and SMTP profile via API
-- Sets up Cloudflare named tunnel with interactive browser auth
-- Optionally configures ufw firewall
-
-```bash
-sudo bash setup-gophish.sh              # Run all phases (interactive)
-sudo bash setup-gophish.sh --install    # Phase 1 only: install GoPhish + cloudflared
-sudo bash setup-gophish.sh --restore --api-key KEY  # Phase 2 only: restore data
-sudo bash setup-gophish.sh --tunnel     # Phase 3 only: Cloudflare tunnel
-sudo bash setup-gophish.sh --verify     # Check all services
-```
-
-### `restore-gophish.sh` — Restore from Backup (Existing Data)
-Restores GoPhish from a backup tarball onto a VM that already has the binary installed.
-Use this when migrating to a new VM or recovering from a failure — it preserves all
-campaigns, credentials, templates, and admin settings from the database backup.
-
-```bash
-# First, create a backup on the current server:
-sudo tar czf /tmp/gophish-backup-$(date +%Y%m%d).tar.gz \
-    /opt/gophish/gophish.db \
-    /opt/gophish/config.json \
-    /opt/gophish/gophish_admin.crt \
-    /opt/gophish/gophish_admin.key \
-    /etc/systemd/system/gophish.service
-
-# On the new VM (after running setup-gophish.sh --install):
-sudo bash restore-gophish.sh /path/to/gophish-backup-YYYYMMDD.tar.gz
-```
-
-What it does:
-- Stops GoPhish and cloudflared services
-- Extracts backup tarball (database, config, certs, service files)
-- Disables sleep/suspend on the VM
-- Restarts services and verifies they're running
-- All campaigns, templates, landing pages, groups, SMTP profiles, and admin
-  credentials are restored from the database
+**Troubleshooting Notes (RDP black screen):**
+1. Must be logged OUT of ESXi console before RDP'ing in — Ubuntu won't share a desktop session
+2. `/etc/gdm3/custom.conf` should have both `WaylandEnable=false` and `DefaultSession=gnome-xorg.desktop`
+3. If still black screen after reboot, try: `sudo apt install -y xorgxrdp && echo "gnome-session" > ~/.xsession && sudo systemctl restart xrdp`
 
 ---
 
