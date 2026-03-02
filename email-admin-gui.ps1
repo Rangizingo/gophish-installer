@@ -2,8 +2,8 @@ Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
 # --- Config ---
-$sender = "itsupport@blancoitservices.net"
-$domain = "blancoitservices.net"
+$sender = "support@expertimportersllc.com"
+$domain = "expertimportersllc.com"
 $gophishApi = "https://localhost:3333/api"
 $gophishKey = "38154aafd6867378cb200f31661aa4ed524bb64aa8d91f6d1ad0d61fb8f695fa"
 $targets = @(
@@ -185,25 +185,106 @@ $btnReleaseAll.Add_Click({
 })
 $form.Controls.Add($btnReleaseAll)
 
-$btnReleaseKM = New-StyledButton "Release Kevin+Matt" 315 112 165 35 @(0, 100, 0)
-$btnReleaseKM.Add_Click({
+$btnReleaseSelected = New-StyledButton "Release Selected..." 315 112 165 35 @(0, 100, 0)
+$btnReleaseSelected.Add_Click({
     if (-not $script:connected) { Write-Output-Box "[!] Connect to Exchange Online first"; return }
-    Write-Output-Box "`r`n--- RELEASING FOR KEVIN + MATT ---"
+    Write-Output-Box "`r`n--- LOADING QUARANTINED MESSAGES ---"
     try {
         $q = Get-QuarantineMessage -SenderAddress $sender -StartReceivedDate (Get-Date).AddDays(-7)
-        $tgt = @("kmarchese@equippers.com", "mfrank@equippers.com")
-        $released = 0
+        if (-not $q) { Write-Output-Box "No quarantined messages from $sender"; return }
+        $q = @($q | Sort-Object ReceivedTime -Descending)
+
+        # Build selection dialog
+        $dlg = New-Object System.Windows.Forms.Form
+        $dlg.Text = "Select Messages to Release"
+        $dlg.Size = New-Object System.Drawing.Size(700, 450)
+        $dlg.StartPosition = "CenterParent"
+        $dlg.BackColor = [System.Drawing.Color]::FromArgb(30, 30, 30)
+        $dlg.ForeColor = [System.Drawing.Color]::White
+        $dlg.FormBorderStyle = "FixedDialog"
+        $dlg.MaximizeBox = $false
+        $dlg.MinimizeBox = $false
+
+        $lbl = New-Object System.Windows.Forms.Label
+        $lbl.Text = "Check messages to release ($($q.Count) found):"
+        $lbl.Location = New-Object System.Drawing.Point(10, 10)
+        $lbl.Size = New-Object System.Drawing.Size(660, 20)
+        $lbl.Font = New-Object System.Drawing.Font("Consolas", 9, [System.Drawing.FontStyle]::Bold)
+        $dlg.Controls.Add($lbl)
+
+        $clb = New-Object System.Windows.Forms.CheckedListBox
+        $clb.Location = New-Object System.Drawing.Point(10, 35)
+        $clb.Size = New-Object System.Drawing.Size(660, 310)
+        $clb.BackColor = [System.Drawing.Color]::FromArgb(20, 20, 20)
+        $clb.ForeColor = [System.Drawing.Color]::FromArgb(0, 255, 0)
+        $clb.Font = New-Object System.Drawing.Font("Consolas", 9)
+        $clb.BorderStyle = "None"
+        $clb.CheckOnClick = $true
+
         foreach ($msg in $q) {
-            if ($msg.RecipientAddress -in $tgt) {
-                $msg | Release-QuarantineMessage -ReleaseToAll -Force -ErrorAction SilentlyContinue
-                Write-Output-Box "[OK] Released: $($msg.RecipientAddress)"
-                $released++
-            }
+            $ts = $msg.ReceivedTime.ToString("MM/dd HH:mm")
+            $subj = if ($msg.Subject.Length -gt 40) { $msg.Subject.Substring(0, 40) + "..." } else { $msg.Subject }
+            $entry = "$ts | $($msg.RecipientAddress) | $subj"
+            [void]$clb.Items.Add($entry, $false)
         }
-        if ($released -eq 0) { Write-Output-Box "No messages found for Kevin or Matt" }
+        $dlg.Controls.Add($clb)
+
+        $btnAll = New-Object System.Windows.Forms.Button
+        $btnAll.Text = "Select All"
+        $btnAll.Location = New-Object System.Drawing.Point(10, 355)
+        $btnAll.Size = New-Object System.Drawing.Size(100, 30)
+        $btnAll.BackColor = [System.Drawing.Color]::FromArgb(80, 80, 80)
+        $btnAll.ForeColor = [System.Drawing.Color]::White
+        $btnAll.FlatStyle = "Flat"
+        $btnAll.Font = New-Object System.Drawing.Font("Consolas", 8, [System.Drawing.FontStyle]::Bold)
+        $btnAll.Add_Click({ for ($i = 0; $i -lt $clb.Items.Count; $i++) { $clb.SetItemChecked($i, $true) } })
+        $dlg.Controls.Add($btnAll)
+
+        $btnNone = New-Object System.Windows.Forms.Button
+        $btnNone.Text = "Select None"
+        $btnNone.Location = New-Object System.Drawing.Point(115, 355)
+        $btnNone.Size = New-Object System.Drawing.Size(110, 30)
+        $btnNone.BackColor = [System.Drawing.Color]::FromArgb(80, 80, 80)
+        $btnNone.ForeColor = [System.Drawing.Color]::White
+        $btnNone.FlatStyle = "Flat"
+        $btnNone.Font = New-Object System.Drawing.Font("Consolas", 8, [System.Drawing.FontStyle]::Bold)
+        $btnNone.Add_Click({ for ($i = 0; $i -lt $clb.Items.Count; $i++) { $clb.SetItemChecked($i, $false) } })
+        $dlg.Controls.Add($btnNone)
+
+        $btnRelease = New-Object System.Windows.Forms.Button
+        $btnRelease.Text = "Release Selected"
+        $btnRelease.Location = New-Object System.Drawing.Point(470, 355)
+        $btnRelease.Size = New-Object System.Drawing.Size(200, 30)
+        $btnRelease.BackColor = [System.Drawing.Color]::FromArgb(0, 150, 0)
+        $btnRelease.ForeColor = [System.Drawing.Color]::White
+        $btnRelease.FlatStyle = "Flat"
+        $btnRelease.Font = New-Object System.Drawing.Font("Consolas", 9, [System.Drawing.FontStyle]::Bold)
+        $btnRelease.DialogResult = [System.Windows.Forms.DialogResult]::OK
+        $dlg.Controls.Add($btnRelease)
+        $dlg.AcceptButton = $btnRelease
+
+        $result = $dlg.ShowDialog($form)
+        if ($result -eq [System.Windows.Forms.DialogResult]::OK) {
+            $indices = $clb.CheckedIndices
+            if ($indices.Count -eq 0) { Write-Output-Box "No messages selected"; return }
+            Write-Output-Box "Releasing $($indices.Count) message(s)..."
+            $released = 0
+            foreach ($i in $indices) {
+                try {
+                    $q[$i] | Release-QuarantineMessage -ReleaseToAll -Force -ErrorAction Stop
+                    $ts = $q[$i].ReceivedTime.ToString("MM/dd HH:mm")
+                    Write-Output-Box "[OK] Released: $($q[$i].RecipientAddress) ($ts)"
+                    $released++
+                } catch {
+                    Write-Output-Box "[WARN] $($q[$i].RecipientAddress): $($_.Exception.Message)"
+                }
+            }
+            Write-Output-Box "Released $released of $($indices.Count) selected message(s)"
+        } else { Write-Output-Box "Cancelled" }
+        $dlg.Dispose()
     } catch { Write-Output-Box "[ERROR] $($_.Exception.Message)" }
 })
-$form.Controls.Add($btnReleaseKM)
+$form.Controls.Add($btnReleaseSelected)
 
 # =============================================
 # SECTION 3: MESSAGE TRACE & DIAGNOSTICS
