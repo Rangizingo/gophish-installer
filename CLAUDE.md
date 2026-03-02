@@ -251,43 +251,37 @@ plan.md                     # OCI cloud migration plan (superseded by Ubuntu VM 
 
 The install scripts include optional permanent Cloudflare Tunnel setup for fixed campaign URLs.
 
-### Current Configuration
-- **Tunnel Name:** gophish
-- **Tunnel ID:** be9f9ec3-cd9f-4e82-9f3a-0b4933c37912
-- **Public URL:** https://phish.blancoitsolutions.com
-- **Config File:** ~/.cloudflared/config.yml
-- **Credentials:** ~/.cloudflared/<tunnel-id>.json
+### Current Configuration (Ubuntu VM)
+- **Tunnel Name:** gophish-portal
+- **Tunnel ID:** 225133a8-9369-45b1-8561-44ab10d13993
+- **Public URL:** https://portal.expertimportersllc.com (PENDING: domain must be on Cloudflare DNS)
+- **Config File:** /etc/cloudflared/config.yml
+- **Credentials:** /etc/cloudflared/225133a8-9369-45b1-8561-44ab10d13993.json
+- **Service:** systemd `cloudflared.service` (runs on boot)
+- **Ingress:** portal.expertimportersllc.com → http://localhost:80, catch-all → 404
+- **Direct visits:** Return 404 — landing page only served via GoPhish tracking links
 
-### Tunnel Commands
+### BLOCKER: Domain DNS must move to Cloudflare
+The named tunnel CNAME (`<uuid>.cfargotunnel.com`) resolves to a private Cloudflare-internal IPv6 address.
+This only works when the domain's DNS is proxied through Cloudflare. Steps to complete:
+1. Add `expertimportersllc.com` to Cloudflare (free plan) — existing DNS records auto-import
+2. Update nameservers at Epik to point to Cloudflare's nameservers
+3. CNAME already exists in Epik: `portal` → `225133a8-9369-45b1-8561-44ab10d13993.cfargotunnel.com`
+4. Once domain is active on Cloudflare, the tunnel route works automatically
+- Domain stays registered at Epik, mail/SPF/DKIM/DMARC all stay the same
+
+### Fallback: Quick Tunnel
+If named tunnel is unavailable, start a quick tunnel with random URL:
 ```bash
-# Start tunnel (foreground)
-cloudflared tunnel run gophish
-
-# Start tunnel (background - Linux)
-cloudflared tunnel run gophish &
-
-# Check tunnel status
-cloudflared tunnel list
-
-# View tunnel info
-cloudflared tunnel info gophish
+sudo systemctl start cloudflared-quick
+grep -oP 'https://[a-z0-9-]+\.trycloudflare\.com' /opt/gophish/logs/cloudflared.log | tail -1
 ```
+Note: URL changes on every restart. Disable named tunnel first to avoid port conflicts.
 
-### Setup Flow (built into install scripts)
-1. Install cloudflared (auto via apt/chocolatey)
-2. Browser login to Cloudflare account
-3. Create named tunnel
-4. Route DNS to subdomain
-5. Save config to ~/.cloudflared/config.yml
-6. Save tunnel URL to ~/gophish/tunnel_url.txt
-
-### Quick vs Permanent Tunnels
-| Feature | Quick Tunnel | Permanent Tunnel |
-|---------|--------------|------------------|
-| URL | Random (changes) | Fixed subdomain |
-| Old links | Break on restart | Always work |
-| Setup | `cloudflared tunnel --url` | One-time via installer |
-| Use case | Testing | Production campaigns |
+### Previous Configuration (deprecated)
+- **Tunnel Name:** gophish (old Windows/Docker setup)
+- **Tunnel ID:** be9f9ec3-cd9f-4e82-9f3a-0b4933c37912
+- **Public URL:** https://phish.blancoitsolutions.com (no longer active)
 
 ## Email Delivery Notes
 
@@ -303,13 +297,20 @@ cloudflared tunnel info gophish
 ## Landing Page Flow
 
 1. Target clicks phishing link → M365-styled login page (Restaurant Equippers branded)
-2. Target enters password → form submits via AJAX (GoPhish captures credentials)
-3. "Verifying credentials..." spinner (2 seconds)
-4. "Password updated" confirmation screen with green checkmark
-5. Progress bar + 8-second countdown → auto-redirect to restaurantequippers.sharepoint.com
-6. "Continue to SharePoint" button as manual fallback
+2. Page shows target's email (pre-filled via `{{.Email}}`), avatar initials auto-generated
+3. Three password fields: Current password, New password, Confirm new password
+4. Client-side validation ensures new passwords match before submission
+5. Form submits via AJAX → GoPhish captures all three fields (current password is the real credential)
+6. "Updating your password..." spinner (2 seconds)
+7. "Password updated" confirmation screen with green checkmark
+8. Progress bar + 8-second countdown → auto-redirect to restaurantequippers.sharepoint.com
+9. "Continue to SharePoint" button as manual fallback
 
-**Key technical detail:** Form uses `XMLHttpRequest` to POST credentials in background so the page stays loaded for the confirmation screen. Default GoPhish form POST would redirect immediately, skipping the confirmation.
+**Key technical details:**
+- Form uses `XMLHttpRequest` to POST credentials in background so the page stays loaded for the confirmation screen
+- Password requirements box adds legitimacy (purely cosmetic, no enforcement)
+- GoPhish captures all form fields: `email`, `password`, `new_password`, `confirm_password`
+- Direct visits to the phishing URL return 404 — only GoPhish tracking links (`?rid=xxx`) serve the page
 
 ## Template Updates
 
