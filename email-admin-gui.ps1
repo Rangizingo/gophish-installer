@@ -538,7 +538,12 @@ $btnPhishSimOverride.Add_Click({
             Write-Output-Box "[OK] Created override rule for $domain from 174.105.36.233"
         }
         Write-Output-Box "[OK] Phish simulation override active - emails should bypass quarantine"
-    } catch { Write-Output-Box "[ERROR] $($_.Exception.Message)" }
+    } catch {
+        Write-Output-Box "[ERROR] $($_.Exception.Message)"
+        if ($_.Exception.InnerException) { Write-Output-Box "  Inner: $($_.Exception.InnerException.Message)" }
+        Write-Output-Box "  Command: $($_.InvocationInfo.Line.Trim())"
+        Write-Output-Box "  FullError: $($_ | Out-String)"
+    }
 })
 $form.Controls.Add($btnPhishSimOverride)
 
