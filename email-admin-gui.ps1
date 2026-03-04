@@ -27,12 +27,14 @@ public class TrustAllGui : ICertificatePolicy {
 $form = New-Object System.Windows.Forms.Form
 $form.Text = "Email Admin - Phishing Campaign Manager"
 $form.Size = New-Object System.Drawing.Size(960, 820)
+$form.MinimumSize = New-Object System.Drawing.Size(960, 820)
 $form.StartPosition = "CenterScreen"
 $form.BackColor = [System.Drawing.Color]::FromArgb(30, 30, 30)
 $form.ForeColor = [System.Drawing.Color]::White
 $form.Font = New-Object System.Drawing.Font("Consolas", 10)
-$form.FormBorderStyle = "FixedSingle"
-$form.MaximizeBox = $false
+$form.FormBorderStyle = "Sizable"
+$form.MaximizeBox = $true
+$form.AutoScaleMode = [System.Windows.Forms.AutoScaleMode]::Dpi
 
 # Title
 $title = New-Object System.Windows.Forms.Label
@@ -49,6 +51,7 @@ $statusLabel.Text = "Exchange: Not Connected"
 $statusLabel.ForeColor = [System.Drawing.Color]::Yellow
 $statusLabel.Location = New-Object System.Drawing.Point(550, 12)
 $statusLabel.Size = New-Object System.Drawing.Size(380, 20)
+$statusLabel.Anchor = [System.Windows.Forms.AnchorStyles]::Top -bor [System.Windows.Forms.AnchorStyles]::Right
 $form.Controls.Add($statusLabel)
 
 # --- Output TextBox ---
@@ -59,13 +62,14 @@ $output.ReadOnly = $true
 $output.BackColor = [System.Drawing.Color]::FromArgb(15, 15, 15)
 $output.ForeColor = [System.Drawing.Color]::FromArgb(0, 255, 0)
 $output.Font = New-Object System.Drawing.Font("Consolas", 9)
-$output.Location = New-Object System.Drawing.Point(20, 460)
-$output.Size = New-Object System.Drawing.Size(910, 310)
+$output.Location = New-Object System.Drawing.Point(20, 517)
+$output.Size = New-Object System.Drawing.Size(910, 253)
+$output.Anchor = [System.Windows.Forms.AnchorStyles]::Top -bor [System.Windows.Forms.AnchorStyles]::Bottom -bor [System.Windows.Forms.AnchorStyles]::Left -bor [System.Windows.Forms.AnchorStyles]::Right
 $form.Controls.Add($output)
 
 $outputLabel = New-Object System.Windows.Forms.Label
 $outputLabel.Text = "Terminal Output:"
-$outputLabel.Location = New-Object System.Drawing.Point(20, 440)
+$outputLabel.Location = New-Object System.Drawing.Point(20, 497)
 $outputLabel.Size = New-Object System.Drawing.Size(200, 20)
 $form.Controls.Add($outputLabel)
 
@@ -78,6 +82,8 @@ function Write-Output-Box($text) {
 }
 
 $script:connected = $false
+$script:lastExportPath = $null
+$script:lastExportGroup = $null
 
 function New-StyledButton($text, $x, $y, $width, $height, $color) {
     $btn = New-Object System.Windows.Forms.Button
@@ -99,6 +105,7 @@ function New-SectionLabel($text, $x, $y) {
     $lbl.ForeColor = [System.Drawing.Color]::FromArgb(196, 18, 48)
     $lbl.Location = New-Object System.Drawing.Point($x, $y)
     $lbl.Size = New-Object System.Drawing.Size(910, 16)
+    $lbl.Anchor = [System.Windows.Forms.AnchorStyles]::Top -bor [System.Windows.Forms.AnchorStyles]::Left -bor [System.Windows.Forms.AnchorStyles]::Right
     $form.Controls.Add($lbl)
 }
 
@@ -198,11 +205,12 @@ $btnReleaseSelected.Add_Click({
         $dlg = New-Object System.Windows.Forms.Form
         $dlg.Text = "Select Messages to Release"
         $dlg.Size = New-Object System.Drawing.Size(700, 450)
+        $dlg.MinimumSize = New-Object System.Drawing.Size(500, 300)
         $dlg.StartPosition = "CenterParent"
         $dlg.BackColor = [System.Drawing.Color]::FromArgb(30, 30, 30)
         $dlg.ForeColor = [System.Drawing.Color]::White
-        $dlg.FormBorderStyle = "FixedDialog"
-        $dlg.MaximizeBox = $false
+        $dlg.FormBorderStyle = "Sizable"
+        $dlg.MaximizeBox = $true
         $dlg.MinimizeBox = $false
 
         $lbl = New-Object System.Windows.Forms.Label
@@ -210,6 +218,7 @@ $btnReleaseSelected.Add_Click({
         $lbl.Location = New-Object System.Drawing.Point(10, 10)
         $lbl.Size = New-Object System.Drawing.Size(660, 20)
         $lbl.Font = New-Object System.Drawing.Font("Consolas", 9, [System.Drawing.FontStyle]::Bold)
+        $lbl.Anchor = [System.Windows.Forms.AnchorStyles]::Top -bor [System.Windows.Forms.AnchorStyles]::Left -bor [System.Windows.Forms.AnchorStyles]::Right
         $dlg.Controls.Add($lbl)
 
         $clb = New-Object System.Windows.Forms.CheckedListBox
@@ -220,6 +229,7 @@ $btnReleaseSelected.Add_Click({
         $clb.Font = New-Object System.Drawing.Font("Consolas", 9)
         $clb.BorderStyle = "None"
         $clb.CheckOnClick = $true
+        $clb.Anchor = [System.Windows.Forms.AnchorStyles]::Top -bor [System.Windows.Forms.AnchorStyles]::Bottom -bor [System.Windows.Forms.AnchorStyles]::Left -bor [System.Windows.Forms.AnchorStyles]::Right
 
         foreach ($msg in $q) {
             $ts = $msg.ReceivedTime.ToString("MM/dd HH:mm")
@@ -237,6 +247,7 @@ $btnReleaseSelected.Add_Click({
         $btnAll.ForeColor = [System.Drawing.Color]::White
         $btnAll.FlatStyle = "Flat"
         $btnAll.Font = New-Object System.Drawing.Font("Consolas", 8, [System.Drawing.FontStyle]::Bold)
+        $btnAll.Anchor = [System.Windows.Forms.AnchorStyles]::Bottom -bor [System.Windows.Forms.AnchorStyles]::Left
         $btnAll.Add_Click({ for ($i = 0; $i -lt $clb.Items.Count; $i++) { $clb.SetItemChecked($i, $true) } })
         $dlg.Controls.Add($btnAll)
 
@@ -248,6 +259,7 @@ $btnReleaseSelected.Add_Click({
         $btnNone.ForeColor = [System.Drawing.Color]::White
         $btnNone.FlatStyle = "Flat"
         $btnNone.Font = New-Object System.Drawing.Font("Consolas", 8, [System.Drawing.FontStyle]::Bold)
+        $btnNone.Anchor = [System.Windows.Forms.AnchorStyles]::Bottom -bor [System.Windows.Forms.AnchorStyles]::Left
         $btnNone.Add_Click({ for ($i = 0; $i -lt $clb.Items.Count; $i++) { $clb.SetItemChecked($i, $false) } })
         $dlg.Controls.Add($btnNone)
 
@@ -260,6 +272,7 @@ $btnReleaseSelected.Add_Click({
         $btnRelease.FlatStyle = "Flat"
         $btnRelease.Font = New-Object System.Drawing.Font("Consolas", 9, [System.Drawing.FontStyle]::Bold)
         $btnRelease.DialogResult = [System.Windows.Forms.DialogResult]::OK
+        $btnRelease.Anchor = [System.Windows.Forms.AnchorStyles]::Bottom -bor [System.Windows.Forms.AnchorStyles]::Right
         $dlg.Controls.Add($btnRelease)
         $dlg.AcceptButton = $btnRelease
 
@@ -803,6 +816,269 @@ $btnUpdateSMTPFrom.Add_Click({
     }
 })
 $form.Controls.Add($btnUpdateSMTPFrom)
+
+# =============================================
+# SECTION 8: M365 Groups & GoPhish Import
+# =============================================
+New-SectionLabel "--- M365 GROUPS & GOPHISH IMPORT ---" 20 437
+
+$btnBrowseGroups = New-StyledButton "Browse & Export Groups" 20 454 200 35 @(100, 50, 150)
+$btnBrowseGroups.Add_Click({
+    if (-not $script:connected) { Write-Output-Box "[!] Connect to Exchange Online first"; return }
+    Write-Output-Box "`r`n--- FETCHING M365 GROUPS ---"
+
+    try {
+        # Collect all groups into a list: @{ Name; Email; Type; Identity }
+        $allGroups = @()
+
+        Write-Output-Box "Fetching distribution groups..."
+        $dgs = Get-DistributionGroup -ResultSize 100 -ErrorAction SilentlyContinue
+        if ($dgs) {
+            foreach ($dg in $dgs) {
+                $count = (Get-DistributionGroupMember -Identity $dg.Identity -ErrorAction SilentlyContinue).Count
+                $allGroups += @{ Name = $dg.Name; Email = $dg.PrimarySmtpAddress; Type = "Distribution"; Identity = $dg.Identity; Count = $count }
+            }
+        }
+
+        Write-Output-Box "Fetching Microsoft 365 groups..."
+        $m365 = Get-UnifiedGroup -ResultSize 100 -ErrorAction SilentlyContinue
+        if ($m365) {
+            foreach ($g in $m365) {
+                $allGroups += @{ Name = $g.DisplayName; Email = $g.PrimarySmtpAddress; Type = "M365"; Identity = $g.Identity; Count = $null }
+            }
+        }
+
+        if ($allGroups.Count -eq 0) {
+            Write-Output-Box "[!] No groups found in tenant"
+            return
+        }
+
+        Write-Output-Box "Found $($allGroups.Count) groups. Opening selector..."
+
+        # Build checklist dialog
+        $dlg = New-Object System.Windows.Forms.Form
+        $dlg.Text = "Select Groups to Export as GoPhish CSV"
+        $dlg.Size = New-Object System.Drawing.Size(750, 500)
+        $dlg.MinimumSize = New-Object System.Drawing.Size(500, 300)
+        $dlg.StartPosition = "CenterParent"
+        $dlg.BackColor = [System.Drawing.Color]::FromArgb(30, 30, 30)
+        $dlg.ForeColor = [System.Drawing.Color]::White
+        $dlg.FormBorderStyle = "Sizable"
+        $dlg.MaximizeBox = $true
+        $dlg.MinimizeBox = $false
+
+        $lbl = New-Object System.Windows.Forms.Label
+        $lbl.Text = "Check groups to export ($($allGroups.Count) found) - each exports as separate CSV:"
+        $lbl.Location = New-Object System.Drawing.Point(10, 10)
+        $lbl.Size = New-Object System.Drawing.Size(710, 20)
+        $lbl.Font = New-Object System.Drawing.Font("Consolas", 9, [System.Drawing.FontStyle]::Bold)
+        $lbl.Anchor = [System.Windows.Forms.AnchorStyles]::Top -bor [System.Windows.Forms.AnchorStyles]::Left -bor [System.Windows.Forms.AnchorStyles]::Right
+        $dlg.Controls.Add($lbl)
+
+        $clb = New-Object System.Windows.Forms.CheckedListBox
+        $clb.Location = New-Object System.Drawing.Point(10, 35)
+        $clb.Size = New-Object System.Drawing.Size(710, 350)
+        $clb.BackColor = [System.Drawing.Color]::FromArgb(20, 20, 20)
+        $clb.ForeColor = [System.Drawing.Color]::FromArgb(0, 255, 0)
+        $clb.Font = New-Object System.Drawing.Font("Consolas", 9)
+        $clb.BorderStyle = "None"
+        $clb.CheckOnClick = $true
+        $clb.Anchor = [System.Windows.Forms.AnchorStyles]::Top -bor [System.Windows.Forms.AnchorStyles]::Bottom -bor [System.Windows.Forms.AnchorStyles]::Left -bor [System.Windows.Forms.AnchorStyles]::Right
+
+        foreach ($g in $allGroups) {
+            $countStr = if ($g.Count -ne $null) { " | Members: $($g.Count)" } else { "" }
+            $entry = "[$($g.Type)] $($g.Name) | $($g.Email)$countStr"
+            [void]$clb.Items.Add($entry, $false)
+        }
+        $dlg.Controls.Add($clb)
+
+        $btnAll = New-Object System.Windows.Forms.Button
+        $btnAll.Text = "Select All"
+        $btnAll.Location = New-Object System.Drawing.Point(10, 395)
+        $btnAll.Size = New-Object System.Drawing.Size(100, 30)
+        $btnAll.BackColor = [System.Drawing.Color]::FromArgb(80, 80, 80)
+        $btnAll.ForeColor = [System.Drawing.Color]::White
+        $btnAll.FlatStyle = "Flat"
+        $btnAll.Font = New-Object System.Drawing.Font("Consolas", 8, [System.Drawing.FontStyle]::Bold)
+        $btnAll.Anchor = [System.Windows.Forms.AnchorStyles]::Bottom -bor [System.Windows.Forms.AnchorStyles]::Left
+        $btnAll.Add_Click({ for ($i = 0; $i -lt $clb.Items.Count; $i++) { $clb.SetItemChecked($i, $true) } })
+        $dlg.Controls.Add($btnAll)
+
+        $btnNone = New-Object System.Windows.Forms.Button
+        $btnNone.Text = "Select None"
+        $btnNone.Location = New-Object System.Drawing.Point(115, 395)
+        $btnNone.Size = New-Object System.Drawing.Size(110, 30)
+        $btnNone.BackColor = [System.Drawing.Color]::FromArgb(80, 80, 80)
+        $btnNone.ForeColor = [System.Drawing.Color]::White
+        $btnNone.FlatStyle = "Flat"
+        $btnNone.Font = New-Object System.Drawing.Font("Consolas", 8, [System.Drawing.FontStyle]::Bold)
+        $btnNone.Anchor = [System.Windows.Forms.AnchorStyles]::Bottom -bor [System.Windows.Forms.AnchorStyles]::Left
+        $btnNone.Add_Click({ for ($i = 0; $i -lt $clb.Items.Count; $i++) { $clb.SetItemChecked($i, $false) } })
+        $dlg.Controls.Add($btnNone)
+
+        $btnExport = New-Object System.Windows.Forms.Button
+        $btnExport.Text = "Export Selected"
+        $btnExport.Location = New-Object System.Drawing.Point(530, 395)
+        $btnExport.Size = New-Object System.Drawing.Size(190, 30)
+        $btnExport.BackColor = [System.Drawing.Color]::FromArgb(0, 150, 0)
+        $btnExport.ForeColor = [System.Drawing.Color]::White
+        $btnExport.FlatStyle = "Flat"
+        $btnExport.Font = New-Object System.Drawing.Font("Consolas", 9, [System.Drawing.FontStyle]::Bold)
+        $btnExport.DialogResult = [System.Windows.Forms.DialogResult]::OK
+        $btnExport.Anchor = [System.Windows.Forms.AnchorStyles]::Bottom -bor [System.Windows.Forms.AnchorStyles]::Right
+        $dlg.Controls.Add($btnExport)
+        $dlg.AcceptButton = $btnExport
+
+        $result = $dlg.ShowDialog($form)
+        if ($result -eq [System.Windows.Forms.DialogResult]::OK) {
+            $indices = $clb.CheckedIndices
+            if ($indices.Count -eq 0) { Write-Output-Box "No groups selected"; $dlg.Dispose(); return }
+
+            # Pick folder to save CSVs
+            $folderDlg = New-Object System.Windows.Forms.FolderBrowserDialog
+            $folderDlg.Description = "Select folder to save GoPhish CSV files"
+            $folderDlg.ShowNewFolderButton = $true
+            if ($folderDlg.ShowDialog() -ne [System.Windows.Forms.DialogResult]::OK) { $dlg.Dispose(); return }
+            $saveFolder = $folderDlg.SelectedPath
+
+            Write-Output-Box "`r`nExporting $($indices.Count) group(s) to: $saveFolder"
+            $exportedPaths = @()
+
+            foreach ($i in $indices) {
+                $g = $allGroups[$i]
+                Write-Output-Box "`r`n--- EXPORTING: $($g.Name) ---"
+
+                try {
+                    $members = $null
+                    if ($g.Type -eq "Distribution") {
+                        $members = Get-DistributionGroupMember -Identity $g.Identity -ErrorAction Stop |
+                            Where-Object { $_.RecipientType -eq 'UserMailbox' -or $_.RecipientType -eq 'MailUser' }
+                    } else {
+                        $groupLinks = Get-UnifiedGroupLinks -Identity $g.Identity -LinkType Members -ErrorAction Stop
+                        $members = @()
+                        foreach ($link in $groupLinks) {
+                            $user = Get-User -Identity $link.PrimarySmtpAddress -ErrorAction SilentlyContinue
+                            if ($user) { $members += $user }
+                        }
+                    }
+
+                    if (-not $members -or $members.Count -eq 0) {
+                        Write-Output-Box "[WARN] No members found in $($g.Name) - skipping"
+                        continue
+                    }
+
+                    # Build CSV
+                    $csvLines = @("email,first_name,last_name,position")
+                    foreach ($m in $members) {
+                        $email = $m.PrimarySmtpAddress
+                        if (-not $email) { $email = $m.WindowsEmailAddress }
+                        if (-not $email) { continue }
+
+                        $firstName = if ($m.FirstName) { $m.FirstName } else { "" }
+                        $lastName = if ($m.LastName) { $m.LastName } else { "" }
+                        $title = if ($m.Title) { $m.Title } else { "Staff" }
+
+                        $csvLines += "$email,$firstName,$lastName,$title"
+                    }
+
+                    $safeName = $g.Name -replace '[^a-zA-Z0-9 _-]', ''
+                    $filePath = Join-Path $saveFolder "$safeName.csv"
+                    $csvLines -join "`r`n" | Out-File -FilePath $filePath -Encoding UTF8
+                    $exportedPaths += $filePath
+                    Write-Output-Box "[OK] $($g.Name): $($members.Count) members -> $filePath"
+                } catch {
+                    Write-Output-Box "[ERROR] $($g.Name): $($_.Exception.Message)"
+                }
+            }
+
+            if ($exportedPaths.Count -gt 0) {
+                $script:lastExportPaths = $exportedPaths
+                $script:lastExportGroup = $allGroups[$indices[0]].Name
+                $script:lastExportPath = $exportedPaths[0]
+                Write-Output-Box "`r`n[OK] Exported $($exportedPaths.Count) group CSV(s). Ready to import to GoPhish."
+            }
+        } else { Write-Output-Box "Cancelled" }
+        $dlg.Dispose()
+    } catch { Write-Output-Box "[ERROR] $($_.Exception.Message)" }
+})
+$form.Controls.Add($btnBrowseGroups)
+
+$btnImportGoPhish = New-StyledButton "Import to GoPhish" 230 454 170 35 @(0, 150, 0)
+$btnImportGoPhish.Add_Click({
+    # Determine CSV file to import
+    $csvFile = $script:lastExportPath
+    if (-not $csvFile -or -not (Test-Path $csvFile)) {
+        $openDialog = New-Object System.Windows.Forms.OpenFileDialog
+        $openDialog.Filter = "CSV Files (*.csv)|*.csv"
+        $openDialog.Title = "Select GoPhish Group CSV"
+        if ($openDialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
+            $csvFile = $openDialog.FileName
+        } else { return }
+    }
+
+    try { Add-Type -AssemblyName Microsoft.VisualBasic } catch {}
+    $defaultName = if ($script:lastExportGroup) { $script:lastExportGroup } else { "Imported Group" }
+    $gpGroupName = [Microsoft.VisualBasic.Interaction]::InputBox("Enter name for the new GoPhish group:", "Import to GoPhish", $defaultName)
+    if (-not $gpGroupName) { return }
+
+    Write-Output-Box "`r`n--- IMPORTING TO GOPHISH: $gpGroupName ---"
+
+    try {
+        $lines = Get-Content -Path $csvFile -Encoding UTF8
+        $targets = @()
+        # Skip header
+        foreach ($line in $lines[1..($lines.Count - 1)]) {
+            $line = $line.Trim()
+            if (-not $line) { continue }
+            $parts = $line.Split(',')
+            if ($parts.Count -ge 4) {
+                $targets += @{
+                    email = $parts[0].Trim()
+                    first_name = $parts[1].Trim()
+                    last_name = $parts[2].Trim()
+                    position = $parts[3].Trim()
+                }
+            }
+        }
+
+        if ($targets.Count -eq 0) {
+            Write-Output-Box "[ERROR] No valid targets found in CSV"
+            return
+        }
+
+        Write-Output-Box "Found $($targets.Count) targets"
+
+        $result = Invoke-GoPhish "POST" "groups/" @{ name = $gpGroupName; targets = $targets }
+        Write-Output-Box "[OK] Created GoPhish group: $gpGroupName (ID: $($result.id))"
+        Write-Output-Box "[OK] $($targets.Count) members imported"
+        foreach ($t in $targets | Select-Object -First 5) {
+            Write-Output-Box "  - $($t.email) ($($t.first_name) $($t.last_name))"
+        }
+        if ($targets.Count -gt 5) { Write-Output-Box "  ... and $($targets.Count - 5) more" }
+    } catch { Write-Output-Box "[ERROR] $($_.Exception.Message)" }
+})
+$form.Controls.Add($btnImportGoPhish)
+
+$btnViewGroups = New-StyledButton "View GoPhish Groups" 410 454 170 35 @(150, 100, 0)
+$btnViewGroups.Add_Click({
+    Write-Output-Box "`r`n--- GOPHISH GROUPS ---"
+    try {
+        $groups = Invoke-GoPhish "GET" "groups/"
+        if ($groups) {
+            foreach ($g in $groups) {
+                Write-Output-Box "`r`n  Group: $($g.name) (ID: $($g.id))"
+                Write-Output-Box "  Members: $($g.targets.Count)"
+                foreach ($t in $g.targets | Select-Object -First 5) {
+                    Write-Output-Box "    - $($t.email) ($($t.first_name) $($t.last_name))"
+                }
+                if ($g.targets.Count -gt 5) { Write-Output-Box "    ... and $($g.targets.Count - 5) more" }
+            }
+        } else {
+            Write-Output-Box "No groups found"
+        }
+    } catch { Write-Output-Box "[ERROR] $($_.Exception.Message)" }
+})
+$form.Controls.Add($btnViewGroups)
 
 # =============================================
 # STARTUP
