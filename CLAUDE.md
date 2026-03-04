@@ -270,13 +270,18 @@ This only works when the domain's DNS is proxied through Cloudflare. Steps to co
 4. Once domain is active on Cloudflare, the tunnel route works automatically
 - Domain stays registered at Epik, mail/SPF/DKIM/DMARC all stay the same
 
-### Fallback: Quick Tunnel
-If named tunnel is unavailable, start a quick tunnel with random URL:
+### Active: Quick Tunnel (current)
+- **Live URL:** `https://flower-provides-lightbox-meant.trycloudflare.com`
+- **Service:** systemd `cloudflared-quick.service`
+- **Status:** Active as of 2026-03-04
+- **IMPORTANT:** URL changes if the service restarts or VM reboots — do NOT restart mid-campaign
+- Named tunnel config moved to `/etc/cloudflared/config.yml.bak` to prevent conflicts
 ```bash
-sudo systemctl start cloudflared-quick
+# Check current URL
 grep -oP 'https://[a-z0-9-]+\.trycloudflare\.com' /opt/gophish/logs/cloudflared.log | tail -1
+# Restart (generates NEW URL — breaks active campaign links)
+sudo systemctl restart cloudflared-quick
 ```
-Note: URL changes on every restart. Disable named tunnel first to avoid port conflicts.
 
 ### Previous Configuration (deprecated)
 - **Tunnel Name:** gophish (old Windows/Docker setup)
