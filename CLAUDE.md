@@ -216,6 +216,7 @@ Ubuntu-GoPhish-Migration/
   restore-gophish.sh         # Restore from backup tarball onto a VM with GoPhish binary
   email-template.html        # Email template (copy for server)
   landing-page.html          # Landing page with AJAX submit + confirmation screen (copy for server)
+  gophish-report-generator.user.js  # Tampermonkey script: report generation + email from GoPhish UI
 
 Windows-Server-2019-Go-Phish-Migration/   # (Abandoned — GoPhish binary bugs, CGO issues)
   plan.md                    # Original Windows Server deployment plan
@@ -293,7 +294,11 @@ sudo systemctl restart cloudflared-quick
 - M365 assigns SCL 8 (High Confidence Phish) to phishing template content regardless of transport rules
 - Transport rules with SCL -1 do NOT override High Confidence Phish action
 - Tenant Allow/Block List alone does not override HPHISH quarantine
-- **Working solutions:** Manual quarantine release via GUI, or Advanced Delivery PhishSimOverridePolicy
+- **Working solution:** Advanced Delivery PhishSimOverridePolicy (configured 2026-03-04)
+  - Sending IPs: 66.223.49.32, 66.223.49.33
+  - Sending domain: expertimportersllc.com
+  - Allowed simulation URL: trycloudflare.com (covers all quick tunnel subdomains)
+- Fallback: Manual quarantine release via email-admin-gui.ps1
 - Per-user Safe Senders (TrustedSendersAndDomains) can bypass quarantine for individual mailboxes
 - Envelope sender with display name causes delivery failures - leave envelope_sender empty in GoPhish
 - expertimportersllc.com emails land in inbox (tested 2026-02-25) — SPF/DKIM/DMARC all configured
@@ -314,8 +319,56 @@ sudo systemctl restart cloudflared-quick
 **Key technical details:**
 - Form uses `XMLHttpRequest` to POST credentials in background so the page stays loaded for the confirmation screen
 - Password requirements box adds legitimacy (purely cosmetic, no enforcement)
-- GoPhish captures all form fields: `email`, `password`, `new_password`, `confirm_password`
+- GoPhish overwrites `name=` on `type="password"` inputs to `"password"`. New/confirm fields use `type="text"` with CSS `-webkit-text-security: disc` to preserve unique names (`password`, `new_password`, `confirm_password`)
 - Direct visits to the phishing URL return 404 — only GoPhish tracking links (`?rid=xxx`) serve the page
+
+## Report Generator (Tampermonkey)
+
+`Ubuntu-GoPhish-Migration/gophish-report-generator.user.js` — Tampermonkey userscript that injects report functionality into the GoPhish admin UI.
+
+### Setup
+1. Install **Tampermonkey** browser extension (Firefox/Chrome)
+2. Create new script → paste contents of `gophish-report-generator.user.js` → Save
+3. Navigate to GoPhish admin (`https://localhost:3333`) — buttons appear automatically
+
+### Buttons Injected
+
+**Campaign Results page** (next to Export CSV):
+| Button | Action |
+|--------|--------|
+| Generate Report | Opens branded HTML report in new tab with donut charts, stats, credential tables |
+| Email Report | Prompts for recipient, sends email-safe report via GoPhish SMTP profile |
+
+**Campaigns List page** (next to New Campaign):
+| Button | Action |
+|--------|--------|
+| Generate Report | Modal to select campaigns → generates combined multi-campaign report |
+| Email Report | Modal to select campaigns → emails combined report to recipient |
+
+### Report Features
+- Restaurant Equippers branding (red `#C41230` / black / white)
+- Executive summary with aggregate stats and SVG donut charts (multi-campaign)
+- Per-campaign breakdown: sent/opened/clicked/submitted with donut chart
+- Risk level per campaign (Low/Moderate/High/Critical based on submission %)
+- Captured credentials table (passwords always shown as REDACTED)
+- Results table sorted by engagement level (submitted first)
+- **Download HTML** — self-contained file, can be emailed as attachment
+- **Print / Save as PDF** — full color output with `print-color-adjust: exact`
+- Print CSS forces all background colors, badges, chart SVGs for proper PDF rendering
+- CONFIDENTIAL banner in header
+
+### Email Report Flow
+1. Fetches SMTP profile from GoPhish API (`/api/smtp/`)
+2. Creates temporary template (`_report_<timestamp>`) with email-safe HTML
+3. Sends via GoPhish's `/api/util/send_test_email` endpoint
+4. Auto-deletes temporary template after sending
+5. Email uses table-based layout with inline styles for Outlook/Gmail compatibility
+
+### Technical Notes
+- Uses GoPhish's global `user.api_key` for API auth (`Authorization: Bearer` header)
+- `@match https://localhost:3333/*` — add additional patterns if accessing via IP
+- Named tunnel config (`/etc/cloudflared/config.yml`) was conflicting with quick tunnel — moved to `.bak`
+- GoPhish's `send_test_email` requires template to exist in DB (cannot pass inline HTML)
 
 ## Template Updates
 
