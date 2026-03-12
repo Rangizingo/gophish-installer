@@ -226,26 +226,60 @@
             });
     }
 
-    function sendTestEmail(smtp, recipient, subject, html) {
-        return fetch('/api/util/send_test_email', {
+    function createTemplate(name, subject, html) {
+        return fetch('/api/templates/', {
             method: 'POST',
             credentials: 'same-origin',
             headers: getApiHeaders(),
-            body: JSON.stringify({
-                template: { name: 'Report', subject: subject, html: html },
-                first_name: 'IT',
-                last_name: 'Security',
-                email: recipient,
-                position: '',
-                url: 'https://localhost',
-                smtp: smtp
-            })
+            body: JSON.stringify({ name: name, subject: subject, html: html, text: '' })
         }).then(function(resp) {
             return resp.json().then(function(data) {
-                if (!resp.ok || !data.success) throw new Error(data.message || 'Failed to send email');
+                if (!resp.ok) throw new Error(data.message || 'Failed to create template');
                 return data;
             });
         });
+    }
+
+    function deleteTemplate(id) {
+        return fetch('/api/templates/' + id, {
+            method: 'DELETE',
+            credentials: 'same-origin',
+            headers: getApiHeaders()
+        });
+    }
+
+    function sendTestEmail(smtp, recipient, subject, html) {
+        var templateName = '_report_' + Date.now();
+        var templateId = null;
+
+        return createTemplate(templateName, subject, html)
+            .then(function(template) {
+                templateId = template.id;
+                return fetch('/api/util/send_test_email', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: getApiHeaders(),
+                    body: JSON.stringify({
+                        template: { name: templateName },
+                        first_name: 'IT',
+                        last_name: 'Security',
+                        email: recipient,
+                        position: '',
+                        url: 'https://localhost',
+                        smtp: smtp
+                    })
+                });
+            })
+            .then(function(resp) {
+                return resp.json().then(function(data) {
+                    if (!resp.ok || !data.success) throw new Error(data.message || 'Failed to send email');
+                    return data;
+                });
+            })
+            .finally(function() {
+                // Clean up temporary template
+                if (templateId) deleteTemplate(templateId);
+            });
     }
 
     // ─── EMAIL-SAFE REPORT GENERATOR ─────────────────────────────────
