@@ -562,11 +562,40 @@
 
         // Print
         '@media print {\n' +
-        '    body { background: white; }\n' +
-        '    .report { box-shadow: none; }\n' +
+        '    body { background: white !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }\n' +
+        '    .report { box-shadow: none; max-width: 100%; }\n' +
         '    .toolbar { display: none !important; }\n' +
+        '    .report-header { background: ' + BRAND.red + ' !important; color: ' + BRAND.white + ' !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }\n' +
+        '    .report-header .confidential { background: rgba(0,0,0,0.2) !important; }\n' +
+        '    .report-header h1, .report-header .report-meta, .report-header .company-name .line1, .report-header .company-name .line2, .report-header .company-name .line3 { color: ' + BRAND.white + ' !important; }\n' +
+        '    .stat-card, .mini-stat { background: ' + BRAND.lightBg + ' !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }\n' +
+        '    .mini-stat { border-top-style: solid !important; border-top-width: 3px !important; }\n' +
+        '    .results-table th { background: ' + BRAND.darkText + ' !important; color: ' + BRAND.white + ' !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }\n' +
+        '    .results-table td { border-bottom: 1px solid #e8e8e8 !important; }\n' +
+        '    .status-badge { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }\n' +
+        '    .badge-sent { background: ' + STATUS_COLORS.sent + ' !important; color: ' + BRAND.white + ' !important; }\n' +
+        '    .badge-opened { background: ' + STATUS_COLORS.opened + ' !important; color: ' + BRAND.darkText + ' !important; }\n' +
+        '    .badge-clicked { background: ' + STATUS_COLORS.clicked + ' !important; color: ' + BRAND.white + ' !important; }\n' +
+        '    .badge-submitted { background: ' + STATUS_COLORS.submitted + ' !important; color: ' + BRAND.white + ' !important; }\n' +
+        '    .badge-reported { background: ' + STATUS_COLORS.reported + ' !important; color: ' + BRAND.white + ' !important; }\n' +
+        '    .badge-error { background: ' + STATUS_COLORS.error + ' !important; color: ' + BRAND.white + ' !important; }\n' +
+        '    .creds-section { background: #fff5f5 !important; border: 1px solid #fecaca !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }\n' +
+        '    .creds-table th { background: ' + BRAND.red + ' !important; color: ' + BRAND.white + ' !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }\n' +
+        '    .campaign-header { border-bottom: 3px solid ' + BRAND.red + ' !important; }\n' +
+        '    .exec-summary h2 { border-bottom: 3px solid ' + BRAND.red + ' !important; }\n' +
+        '    .risk-tag, .risk-banner { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }\n' +
+        '    .status-active { background: #e8f5e9 !important; color: #2e7d32 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }\n' +
+        '    .status-completed { background: #e3f2fd !important; color: #1565c0 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }\n' +
+        '    .report-footer { background: ' + BRAND.lightBg + ' !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }\n' +
+        '    .legend-dot { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }\n' +
+        '    svg { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }\n' +
+        '    .summary-grid { display: grid !important; grid-template-columns: 160px 1fr !important; }\n' +
+        '    .stat-cards { display: grid !important; grid-template-columns: repeat(4, 1fr) !important; }\n' +
+        '    .campaign-stats { display: grid !important; grid-template-columns: 140px 1fr !important; }\n' +
+        '    .mini-stats { display: grid !important; grid-template-columns: repeat(4, 1fr) !important; }\n' +
         '    .campaign-section { page-break-inside: avoid; }\n' +
-        '    .redactable { filter: blur(5px) !important; }\n' +
+        '    .results-table { page-break-inside: auto; }\n' +
+        '    .results-table tr { page-break-inside: avoid; }\n' +
         '}\n';
     }
 
