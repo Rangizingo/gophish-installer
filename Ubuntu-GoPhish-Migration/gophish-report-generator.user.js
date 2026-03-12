@@ -193,8 +193,17 @@
 
     // ─── API FUNCTIONS ───────────────────────────────────────────────
 
+    function getApiHeaders() {
+        // GoPhish stores the API key in the global user object
+        var headers = { 'Content-Type': 'application/json' };
+        if (typeof user !== 'undefined' && user.api_key) {
+            headers['Authorization'] = 'Bearer ' + user.api_key;
+        }
+        return headers;
+    }
+
     function fetchAllCampaigns() {
-        return fetch('/api/campaigns/', { credentials: 'same-origin' })
+        return fetch('/api/campaigns/', { credentials: 'same-origin', headers: getApiHeaders() })
             .then(function(resp) {
                 if (!resp.ok) throw new Error('Failed to fetch campaigns');
                 return resp.json();
@@ -202,7 +211,7 @@
     }
 
     function fetchCampaign(id) {
-        return fetch('/api/campaigns/' + id, { credentials: 'same-origin' })
+        return fetch('/api/campaigns/' + id, { credentials: 'same-origin', headers: getApiHeaders() })
             .then(function(resp) {
                 if (!resp.ok) throw new Error('Failed to fetch campaign ' + id);
                 return resp.json();
