@@ -307,7 +307,7 @@
                 '<button onclick="downloadReport()">&#10515; Download HTML</button>' +
                 '<button onclick="window.print()">&#128438; Print / Save as PDF</button>' +
                 '<div class="toolbar-spacer"></div>' +
-                '<label><input type="checkbox" id="togglePasswords" onchange="toggleRedaction()" checked> Show credentials</label>' +
+                '' +
             '</div>' +
 
             // Body
@@ -338,13 +338,7 @@
             '    a.click();\n' +
             '    URL.revokeObjectURL(url);\n' +
             '}\n' +
-            'function toggleRedaction() {\n' +
-            '    var show = document.getElementById("togglePasswords").checked;\n' +
-            '    document.querySelectorAll(".redactable").forEach(function(el) {\n' +
-            '        el.style.filter = show ? "none" : "blur(5px)";\n' +
-            '        el.style.userSelect = show ? "auto" : "none";\n' +
-            '    });\n' +
-            '}\n' +
+            '' +
             '</script>\n' +
             '</body>\n</html>';
     }
@@ -420,7 +414,7 @@
                     } else if (val) {
                         display = String(val);
                     }
-                    credsRows += '<td class="redactable">' + escapeHTML(display) + '</td>';
+                    credsRows += '<td style="color:#999; font-style:italic;">REDACTED</td>';
                 });
                 credsRows += '<td>' + escapeHTML(time) + '</td>';
                 credsRows += '<td style="font-size:11px;">' + escapeHTML(ip) + '</td>';
