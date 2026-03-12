@@ -218,6 +218,218 @@
             });
     }
 
+    function fetchSMTPProfiles() {
+        return fetch('/api/smtp/', { credentials: 'same-origin', headers: getApiHeaders() })
+            .then(function(resp) {
+                if (!resp.ok) throw new Error('Failed to fetch SMTP profiles');
+                return resp.json();
+            });
+    }
+
+    function sendTestEmail(smtp, recipient, subject, html) {
+        return fetch('/api/util/send_test_email', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: getApiHeaders(),
+            body: JSON.stringify({
+                template: { name: 'Report', subject: subject, html: html },
+                first_name: 'IT',
+                last_name: 'Security',
+                email: recipient,
+                position: '',
+                url: 'https://localhost',
+                smtp: smtp
+            })
+        }).then(function(resp) {
+            return resp.json().then(function(data) {
+                if (!resp.ok || !data.success) throw new Error(data.message || 'Failed to send email');
+                return data;
+            });
+        });
+    }
+
+    // ─── EMAIL-SAFE REPORT GENERATOR ─────────────────────────────────
+
+    function generateEmailSafeHTML(campaigns) {
+        var reportDate = formatDate(new Date().toISOString());
+
+        var totalSent = 0, totalOpened = 0, totalClicked = 0, totalSubmitted = 0;
+        campaigns.forEach(function(c) {
+            var counts = getStatusCounts(c.results || []);
+            totalSent += counts.sent;
+            totalOpened += counts.opened;
+            totalClicked += counts.clicked;
+            totalSubmitted += counts.submitted;
+        });
+
+        var risk = getRiskLevel(pctNum(totalSubmitted, totalSent));
+
+        // Build campaign sections
+        var campaignRows = '';
+        campaigns.forEach(function(c) {
+            var counts = getStatusCounts(c.results || []);
+            var submissions = parseSubmittedData(c.timeline || []);
+            var cRisk = getRiskLevel(pctNum(counts.submitted, counts.sent));
+
+            // Campaign header
+            campaignRows += '<tr><td style="padding:24px 32px 0 32px;">' +
+                '<table width="100%" cellpadding="0" cellspacing="0"><tr>' +
+                '<td style="border-bottom:3px solid #C41230; padding-bottom:8px;">' +
+                '<span style="font-size:18px; font-weight:700; color:#1B1B1B;">' + escapeHTML(c.name) + '</span>' +
+                '&nbsp;&nbsp;<span style="display:inline-block; background:' + cRisk.bg + '; color:' + cRisk.color + '; padding:3px 8px; font-size:10px; font-weight:700; letter-spacing:0.5px;">' + cRisk.label + '</span>' +
+                '&nbsp;&nbsp;<span style="display:inline-block; background:#e3f2fd; color:#1565c0; padding:3px 8px; font-size:10px; font-weight:700; letter-spacing:0.5px;">' + escapeHTML(c.status || 'In Progress') + '</span>' +
+                '</td></tr></table>' +
+                '<div style="font-size:12px; color:#605E5C; margin-top:8px;">Launched: ' + formatShortDate(c.launch_date) + '</div>' +
+            '</td></tr>';
+
+            // Stats bar
+            campaignRows += '<tr><td style="padding:16px 32px;">' +
+                '<table width="100%" cellpadding="0" cellspacing="0"><tr>' +
+                emailStatCell(counts.sent, '100%', 'Sent', STATUS_COLORS.sent) +
+                emailStatCell(counts.opened, pct(counts.opened, counts.sent), 'Opened', STATUS_COLORS.opened) +
+                emailStatCell(counts.clicked, pct(counts.clicked, counts.sent), 'Clicked', STATUS_COLORS.clicked) +
+                emailStatCell(counts.submitted, pct(counts.submitted, counts.sent), 'Submitted', STATUS_COLORS.submitted) +
+                '</tr></table>' +
+            '</td></tr>';
+
+            // Credentials captured
+            if (submissions.length > 0) {
+                var credFields = getCredentialFields(submissions);
+                campaignRows += '<tr><td style="padding:0 32px 8px 32px;">' +
+                    '<div style="background:#fff5f5; border:1px solid #fecaca; border-radius:4px; padding:16px;">' +
+                    '<div style="font-size:13px; font-weight:700; color:#C41230; margin-bottom:10px;">&#9888; Captured Credentials (' + submissions.length + ')</div>' +
+                    '<table width="100%" cellpadding="0" cellspacing="0" style="font-size:12px;">';
+
+                // Header row
+                campaignRows += '<tr><td style="background:#C41230; color:#fff; padding:6px 10px; font-weight:600;">Email</td>';
+                credFields.forEach(function(f) {
+                    campaignRows += '<td style="background:#C41230; color:#fff; padding:6px 10px; font-weight:600;">' + escapeHTML(fieldLabel(f)) + '</td>';
+                });
+                campaignRows += '<td style="background:#C41230; color:#fff; padding:6px 10px; font-weight:600;">Time</td></tr>';
+
+                // Data rows
+                submissions.forEach(function(s) {
+                    var email = (s.payload.email && s.payload.email[0]) || s.email;
+                    var time = new Date(s.time).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                    campaignRows += '<tr><td style="padding:6px 10px; border-bottom:1px solid #fecaca;">' + escapeHTML(email) + '</td>';
+                    credFields.forEach(function() {
+                        campaignRows += '<td style="padding:6px 10px; border-bottom:1px solid #fecaca; color:#999; font-style:italic;">REDACTED</td>';
+                    });
+                    campaignRows += '<td style="padding:6px 10px; border-bottom:1px solid #fecaca;">' + escapeHTML(time) + '</td></tr>';
+                });
+
+                campaignRows += '</table></div></td></tr>';
+            }
+
+            // Results table
+            var statusOrder = { 'Submitted Data': 0, 'Clicked Link': 1, 'Email Opened': 2, 'Email Sent': 3, 'Error': 4 };
+            var sortedResults = (c.results || []).slice().sort(function(a, b) {
+                return (statusOrder[a.status] || 99) - (statusOrder[b.status] || 99);
+            });
+
+            campaignRows += '<tr><td style="padding:8px 32px 32px 32px;">' +
+                '<table width="100%" cellpadding="0" cellspacing="0" style="font-size:12px;">' +
+                '<tr>' +
+                '<td style="background:#1B1B1B; color:#fff; padding:8px 10px; font-weight:600;">Name</td>' +
+                '<td style="background:#1B1B1B; color:#fff; padding:8px 10px; font-weight:600;">Email</td>' +
+                '<td style="background:#1B1B1B; color:#fff; padding:8px 10px; font-weight:600;">Position</td>' +
+                '<td style="background:#1B1B1B; color:#fff; padding:8px 10px; font-weight:600;">Status</td>' +
+                '</tr>';
+
+            sortedResults.forEach(function(r) {
+                var badge = emailBadge(r.status);
+                campaignRows += '<tr>' +
+                    '<td style="padding:8px 10px; border-bottom:1px solid #e8e8e8;">' + escapeHTML(r.first_name + ' ' + r.last_name) + '</td>' +
+                    '<td style="padding:8px 10px; border-bottom:1px solid #e8e8e8;">' + escapeHTML(r.email) + '</td>' +
+                    '<td style="padding:8px 10px; border-bottom:1px solid #e8e8e8;">' + escapeHTML(r.position || '-') + '</td>' +
+                    '<td style="padding:8px 10px; border-bottom:1px solid #e8e8e8;"><span style="display:inline-block; padding:2px 8px; font-size:11px; font-weight:600; color:' + badge.fg + '; background:' + badge.bg + ';">' + escapeHTML(r.status) + '</span></td>' +
+                '</tr>';
+            });
+
+            campaignRows += '</table></td></tr>';
+
+            // Spacer between campaigns
+            campaignRows += '<tr><td style="padding:0 32px;"><hr style="border:none; border-top:1px solid #e0e0e0;"></td></tr>';
+        });
+
+        // Assemble full email
+        return '<table width="100%" cellpadding="0" cellspacing="0" style="max-width:750px; margin:0 auto; font-family:Arial, Helvetica, sans-serif; color:#1B1B1B;">' +
+
+            // Header
+            '<tr><td style="background:#C41230; padding:28px 32px; color:#ffffff;">' +
+                '<div style="font-family:Arial Black, Arial, sans-serif; font-weight:900;">' +
+                    '<div style="font-size:16px; letter-spacing:1px;">RESTAURANT</div>' +
+                    '<div style="font-size:22px; letter-spacing:1px;">EQUIPPERS</div>' +
+                    '<div style="font-size:8px; letter-spacing:2px; font-weight:400; font-family:Arial, sans-serif; margin-top:2px;">WAREHOUSE STORES</div>' +
+                '</div>' +
+                '<div style="font-size:24px; font-weight:300; margin-top:16px;">Phishing Simulation Report</div>' +
+                '<div style="font-size:12px; opacity:0.85; margin-top:6px;">Generated ' + reportDate + ' &bull; ' + campaigns.length + ' campaign' + (campaigns.length !== 1 ? 's' : '') + ' &bull; ' + totalSent + ' recipients</div>' +
+            '</td></tr>' +
+
+            // Risk banner
+            '<tr><td style="padding:20px 32px 0 32px;">' +
+                '<div style="background:' + risk.bg + '; border-left:4px solid ' + risk.color + '; padding:12px 16px;">' +
+                    '<span style="font-weight:700; color:' + risk.color + '; font-size:12px; letter-spacing:1px;">' + risk.label + ' RISK</span>' +
+                    '<span style="font-size:12px; color:#1B1B1B; margin-left:12px;">' + pct(totalSubmitted, totalSent) + ' of recipients submitted credentials</span>' +
+                '</div>' +
+            '</td></tr>' +
+
+            // Overall stats
+            '<tr><td style="padding:20px 32px;">' +
+                '<table width="100%" cellpadding="0" cellspacing="0"><tr>' +
+                emailStatCell(totalSent, '100%', 'Sent', STATUS_COLORS.sent) +
+                emailStatCell(totalOpened, pct(totalOpened, totalSent), 'Opened', STATUS_COLORS.opened) +
+                emailStatCell(totalClicked, pct(totalClicked, totalSent), 'Clicked', STATUS_COLORS.clicked) +
+                emailStatCell(totalSubmitted, pct(totalSubmitted, totalSent), 'Submitted', STATUS_COLORS.submitted) +
+                '</tr></table>' +
+            '</td></tr>' +
+
+            // Campaign sections
+            campaignRows +
+
+            // Footer
+            '<tr><td style="background:#F8F8F8; padding:16px 32px; text-align:center; font-size:11px; color:#605E5C; border-top:1px solid #e0e0e0;">' +
+                'Generated by GoPhish Report Generator &bull; Restaurant Equippers &bull; CONFIDENTIAL' +
+            '</td></tr>' +
+
+        '</table>';
+    }
+
+    function emailStatCell(value, pctStr, label, color) {
+        return '<td width="25%" style="text-align:center; padding:12px 8px; background:#F8F8F8;">' +
+            '<div style="font-size:26px; font-weight:700; color:' + color + ';">' + value + '</div>' +
+            '<div style="font-size:11px; color:#605E5C;">' + pctStr + '</div>' +
+            '<div style="font-size:10px; color:#605E5C; text-transform:uppercase; letter-spacing:0.5px; margin-top:4px;">' + label + '</div>' +
+        '</td>';
+    }
+
+    function emailBadge(status) {
+        switch(status) {
+            case 'Email Sent': return { bg: STATUS_COLORS.sent, fg: '#ffffff' };
+            case 'Email Opened': return { bg: STATUS_COLORS.opened, fg: '#1B1B1B' };
+            case 'Clicked Link': return { bg: STATUS_COLORS.clicked, fg: '#ffffff' };
+            case 'Submitted Data': return { bg: STATUS_COLORS.submitted, fg: '#ffffff' };
+            case 'Email Reported': return { bg: STATUS_COLORS.reported, fg: '#ffffff' };
+            default: return { bg: STATUS_COLORS.error, fg: '#ffffff' };
+        }
+    }
+
+    function promptAndSendEmail(campaigns) {
+        var recipient = prompt('Enter recipient email address:');
+        if (!recipient || recipient.trim() === '') return Promise.resolve();
+        recipient = recipient.trim();
+
+        return fetchSMTPProfiles().then(function(profiles) {
+            if (!profiles || profiles.length === 0) {
+                throw new Error('No SMTP profiles configured in GoPhish');
+            }
+            var smtp = profiles[0];
+            var subject = 'Phishing Simulation Report - ' + new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+            var html = generateEmailSafeHTML(campaigns);
+            return sendTestEmail(smtp, recipient, subject, html);
+        });
+    }
+
     // ─── REPORT HTML GENERATION ──────────────────────────────────────
 
     function generateReportHTML(campaigns) {
@@ -652,6 +864,29 @@
             });
 
             btnGroup.parentNode.insertBefore(reportBtn, btnGroup.nextSibling);
+
+            // Email Report button
+            var emailBtn = document.createElement('button');
+            emailBtn.id = 'emailReportBtn';
+            emailBtn.className = 'btn btn-primary';
+            emailBtn.innerHTML = '<i class="fa fa-envelope-o"></i> Email Report';
+            emailBtn.style.marginLeft = '5px';
+            emailBtn.addEventListener('click', function() {
+                emailBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Sending...';
+                emailBtn.disabled = true;
+                var campaignId = getCurrentCampaignId();
+                fetchCampaign(campaignId).then(function(campaign) {
+                    return promptAndSendEmail([campaign]);
+                }).then(function() {
+                    alert('Report emailed successfully!');
+                }).catch(function(err) {
+                    if (err.message) alert('Error: ' + err.message);
+                }).finally(function() {
+                    emailBtn.innerHTML = '<i class="fa fa-envelope-o"></i> Email Report';
+                    emailBtn.disabled = false;
+                });
+            });
+            reportBtn.parentNode.insertBefore(emailBtn, reportBtn.nextSibling);
         }, 500);
     }
 
@@ -735,6 +970,9 @@
                         '</div>' +
                         '<div class="modal-footer">' +
                             '<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>' +
+                            '<button type="button" class="btn btn-primary" id="rptEmail">' +
+                                '<i class="fa fa-envelope-o"></i> Email Report' +
+                            '</button>' +
                             '<button type="button" class="btn btn-primary" id="rptGenerate">' +
                                 '<i class="fa fa-file-text-o"></i> Generate Report' +
                             '</button>' +
@@ -783,6 +1021,39 @@
                 w.document.write(html);
                 w.document.close();
                 $(modal).modal('hide');
+            });
+
+            document.getElementById('rptEmail').addEventListener('click', function() {
+                var emailBtn = this;
+                var selectedIds = [];
+                modal.querySelectorAll('.campaign-cb:checked').forEach(function(cb) {
+                    selectedIds.push(parseInt(cb.value));
+                });
+
+                if (selectedIds.length === 0) {
+                    alert('Please select at least one campaign.');
+                    return;
+                }
+
+                emailBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Sending...';
+                emailBtn.disabled = true;
+
+                var selectedCampaigns = campaigns.filter(function(c) {
+                    return selectedIds.indexOf(c.id) !== -1;
+                });
+                selectedCampaigns.sort(function(a, b) {
+                    return new Date(a.launch_date) - new Date(b.launch_date);
+                });
+
+                promptAndSendEmail(selectedCampaigns).then(function() {
+                    alert('Report emailed successfully!');
+                    $(modal).modal('hide');
+                }).catch(function(err) {
+                    if (err.message) alert('Error: ' + err.message);
+                }).finally(function() {
+                    emailBtn.innerHTML = '<i class="fa fa-envelope-o"></i> Email Report';
+                    emailBtn.disabled = false;
+                });
             });
 
             $(modal).on('hidden.bs.modal', function() {
